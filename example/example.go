@@ -2,22 +2,23 @@ package main
 import (
     "github.com/zl-leaf/mspider/spider"
     "github.com/zl-leaf/mspider/engine"
-    "os"
-    "log"
 )
 
-type DemoSpider struct {
-    spider.Spider
+type DemoSpiderHeart struct {
+    startURLs []string
+    rules []string
 }
 
+func (this *DemoSpiderHeart) StartURLs() []string {
+    return this.startURLs
+}
 
-func (this *DemoSpider)Parse() error {
-    file, _ := os.Create("content.log")
-    logger := log.New(file, "", log.LstdFlags|log.Llongfile)
-    redirects := this.Redirects()
-    for _,u := range redirects {
-        logger.Println(u)
-    }
+func (this *DemoSpiderHeart) Rules() []string {
+    return this.rules
+}
+
+func (this *DemoSpiderHeart)Parse() error {
+    // TODO
     return nil
 }
 
@@ -26,9 +27,12 @@ func main() {
     e.Init()
     e.Load()
 
-    s := &DemoSpider{}
-    s.Init("", []string{"http://hao.jobbole.com/python-scrapy/"}, []string{"jobbole.*"})
-    e.AddSpider(s)
+    heart := &DemoSpiderHeart{
+        startURLs : []string{"http://hao.jobbole.com/python-scrapy"},
+        rules : []string{"jobbole.*"},
+    }
+    spider,_ := spider.New("", heart)
+    e.AddSpider(spider)
 
     e.Start()
 

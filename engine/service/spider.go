@@ -6,7 +6,7 @@ import(
 )
 
 type SpiderService struct {
-    mSpiders map[string]spider.ISpider
+    mSpiders map[string]*spider.Spider
     engineListener chan string
     eventPublisher chan string
     listeners []chan string
@@ -34,7 +34,7 @@ func (this *SpiderService) AddListener(s IService) error {
     return nil
 }
 
-func (this *SpiderService) AddSpider(s spider.ISpider) {
+func (this *SpiderService) AddSpider(s *spider.Spider) {
     this.mSpiders[s.ID()] = s
 }
 
@@ -56,7 +56,6 @@ func (this *SpiderService) do(content string) {
         return
     }
     s.Do(dresp.URL, dresp.Html)
-    s.Parse()
     redirects := s.Redirects()
     for _,redirect := range redirects {
         this.eventPublisher <- redirect
@@ -64,7 +63,7 @@ func (this *SpiderService) do(content string) {
     s.Relase()
 }
 
-func (this *SpiderService) getSpider(u string) (targetSpider spider.ISpider, err error) {
+func (this *SpiderService) getSpider(u string) (targetSpider *spider.Spider, err error) {
     matchResult := false
     for _,s := range this.mSpiders {
         if s.State() != spider.FreeState {
@@ -84,7 +83,7 @@ func (this *SpiderService) getSpider(u string) (targetSpider spider.ISpider, err
 
 func CreateSpiderService(engineListener chan string) (spiderService *SpiderService) {
     spiderService = &SpiderService{}
-    spiderService.mSpiders = make(map[string]spider.ISpider, 0)
+    spiderService.mSpiders = make(map[string]*spider.Spider, 0)
     spiderService.engineListener = engineListener
     spiderService.eventPublisher = make(chan string)
     spiderService.listeners = make([]chan string, 0)

@@ -8,42 +8,28 @@ const (
     WorkingState = 1
 )
 
-type ISpider interface {
-    ID() string
-    Do(u string,content string) error
-    Relase() error
-    Parse() error
-    Rules() []string
+type SpiderHeart interface {
     StartURLs() []string
-    Redirects() []string
-    State() int
-    MatchRules(u string) (bool,error)
+    Rules() []string
+    Parse() error
 }
 
 type Spider struct {
     id string
-    startURLs []string
-    rules []string
     url string
     html string
     state int
+    heart SpiderHeart
 }
 
-
-func (this *Spider) Init(id string, startURLs []string, rules []string) error {
+func New(id string, heart SpiderHeart) (spider *Spider, err error) {
     spiderID := id
     if spiderID == "" {
         spiderID = autoID()
     }
-    this.id = id
-    this.startURLs = startURLs
-    if len(rules) > 0 {
-        this.rules = rules
-    } else {
-        this.rules = []string{"*"}
-    }
-    this.state = FreeState
-    return nil
+
+    spider = &Spider{id:spiderID, state:FreeState, heart:heart}
+    return
 }
 
 func (this *Spider) ID() string {
@@ -51,26 +37,22 @@ func (this *Spider) ID() string {
 }
 
 func (this *Spider) Rules() []string {
-    return this.rules
+    return this.heart.Rules()
 }
 
 func (this *Spider) StartURLs() []string {
-    return this.startURLs
+    return this.heart.StartURLs()
 }
 
 func (this *Spider) Do(u string, content string) error {
     this.url = u
     this.html = content
     this.state = WorkingState
-    return nil
+    return this.heart.Parse()
 }
 
 func (this *Spider) Relase() error {
     this.state = FreeState
-    return nil
-}
-
-func (this *Spider) Parse() error {
     return nil
 }
 
@@ -84,10 +66,15 @@ func (this *Spider) State() int {
 }
 
 func (this *Spider) MatchRules(u string) (result bool, err error) {
-    for _,rule := range this.rules {
-        if r,_ := regexp.MatchString(rule, u); r {
-            result = true
-            break
+    rules := this.Rules()
+    if len(rules) == 0 {
+        result = true
+    } else {
+        for _,rule := range rules {
+            if r,_ := regexp.MatchString(rule, u); r {
+                result = true
+                break
+            }
         }
     }
     return

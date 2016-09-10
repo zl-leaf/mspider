@@ -29,7 +29,7 @@ func (this *Engine)Load() {
     this.mDownloaderService.AddDownloader(d)
 }
 
-func (this *Engine)AddSpider(s spider.ISpider) {
+func (this *Engine)AddSpider(s *spider.Spider) {
     this.mSpiderService.AddSpider(s)
 }
 
