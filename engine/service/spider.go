@@ -1,15 +1,18 @@
 package service
 import(
     "fmt"
+    "time"
     "encoding/json"
     "github.com/zl-leaf/mspider/spider"
+    "github.com/zl-leaf/mspider/logger"
 )
 
 type SpiderService struct {
     mSpiders map[string]*spider.Spider
     engineListener chan string
     eventPublisher chan string
-    listeners []chan string
+    listener IService
+    state int
 }
 
 func (this *SpiderService) EventPublisher() chan string {
@@ -17,9 +20,8 @@ func (this *SpiderService) EventPublisher() chan string {
 }
 
 func (this *SpiderService) Start() error {
-    for _,listener := range this.listeners {
-        go this.listen(listener)
-    }
+    this.state = WorkingState
+    go this.listen(this.listener.EventPublisher())
 
     for _,s := range this.mSpiders {
         for _,u := range s.StartURLs() {
@@ -29,8 +31,30 @@ func (this *SpiderService) Start() error {
     return nil
 }
 
+func (this *SpiderService) Stop() error {
+    this.state = StopState
+    stopChan := make(chan string)
+    go func(stopChan chan string) {
+        for _,s := range this.mSpiders {
+            logger.Info("spider id: %s wait for stop", s.ID())
+            if s.State() != spider.FreeState {
+                for {
+                    time.Sleep(time.Duration(1) * time.Second)
+                    if s.State() == spider.FreeState {
+                        break
+                    }
+                }
+            }
+            logger.Info("spider id: %s has stop", s.ID())
+        }
+        stopChan <- "stop"
+    }(stopChan)
+    <- stopChan
+    return nil
+}
+
 func (this *SpiderService) AddListener(s IService) error {
-    this.listeners = append(this.listeners, s.EventPublisher())
+    this.listener = s
     return nil
 }
 
@@ -38,14 +62,17 @@ func (this *SpiderService) AddSpider(s *spider.Spider) {
     this.mSpiders[s.ID()] = s
 }
 
-func (this *SpiderService) listen(listener chan string) {
+func (this *SpiderService) listen(listenerChan chan string) {
     for {
-        value := <- listener
-        this.do(value)
+        value := <- listenerChan
+        go this.do(value)
     }
 }
 
 func (this *SpiderService) do(content string) {
+    if this.state == StopState {
+        return
+    }
     var dresp DownloadResponse
     err := json.Unmarshal([]byte(content), &dresp)
     if err != nil {
@@ -56,11 +83,12 @@ func (this *SpiderService) do(content string) {
         return
     }
     s.Do(dresp.URL, dresp.Html)
+    defer s.Relase()
+    logger.Info("spider id: %s crawl url: %s.", s.ID(), dresp.URL)
     redirects := s.Redirects()
     for _,redirect := range redirects {
         this.eventPublisher <- redirect
     }
-    s.Relase()
 }
 
 func (this *SpiderService) getSpider(u string) (targetSpider *spider.Spider, err error) {
@@ -86,6 +114,5 @@ func CreateSpiderService(engineListener chan string) (spiderService *SpiderServi
     spiderService.mSpiders = make(map[string]*spider.Spider, 0)
     spiderService.engineListener = engineListener
     spiderService.eventPublisher = make(chan string)
-    spiderService.listeners = make([]chan string, 0)
     return
 }

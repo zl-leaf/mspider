@@ -1,7 +1,9 @@
 package main
 import (
+    "time"
+    "github.com/zl-leaf/mspider/config"
     "github.com/zl-leaf/mspider/spider"
-    "github.com/zl-leaf/mspider/engine"
+    "github.com/zl-leaf/mspider"
 )
 
 type DemoSpiderHeart struct {
@@ -23,19 +25,20 @@ func (this *DemoSpiderHeart)Parse() error {
 }
 
 func main() {
-    e := &engine.Engine{}
-    e.Init()
-    e.Load()
+    mspider,_ := mspider.New()
+    c := &config.Config{DownloaderNum:2}
+    mspider.Load(c)
 
     heart := &DemoSpiderHeart{
         startURLs : []string{"http://hao.jobbole.com/python-scrapy"},
         rules : []string{"jobbole.*"},
     }
     spider,_ := spider.New("", heart)
-    e.AddSpider(spider)
+    mspider.RegisterSpider(spider)
 
-    e.Start()
+    mspider.Start()
 
-    ch := make(chan string)
-    <-ch
+    time.Sleep(time.Duration(10) * time.Second)
+    mspider.Stop()
+
 }

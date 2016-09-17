@@ -5,6 +5,7 @@ import(
 
 type Scheduler struct {
     queue *queue.Queue
+    Interval int
 }
 
 func New() (scheduler *Scheduler, err error) {
