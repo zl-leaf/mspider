@@ -11,7 +11,7 @@ import(
 )
 
 type MSpider struct {
-    mEngine *engine.Engine
+    Engine *engine.Engine
 }
 
 func New() (m *MSpider, err error) {
@@ -21,8 +21,8 @@ func New() (m *MSpider, err error) {
 }
 
 func (this *MSpider) init() {
-    this.mEngine = &engine.Engine{}
-    this.mEngine.Init()
+    this.Engine = &engine.Engine{}
+    this.Engine.Init()
 }
 
 func (this *MSpider) Load(mConfig *config.Config) error {
@@ -32,11 +32,11 @@ func (this *MSpider) Load(mConfig *config.Config) error {
     } else {
         s.Interval = int(time.Second)
     }
-    this.mEngine.SetScheduler(s)
+    this.Engine.SetScheduler(s)
 
     for i := 0; i < mConfig.DownloaderNum; i++ {
         d,_ := downloader.New()
-        this.mEngine.AddDownloader(d)
+        this.Engine.AddDownloader(d)
     }
 
     if mConfig.LogPath != "" {
@@ -48,14 +48,14 @@ func (this *MSpider) Load(mConfig *config.Config) error {
 }
 
 func (this *MSpider) RegisterSpider(s *spider.Spider) {
-    this.mEngine.AddSpider(s)
+    this.Engine.AddSpider(s)
 }
 
 func (this *MSpider)Start() {
-    this.mEngine.Start()
+    this.Engine.Start()
 }
 
 func (this *MSpider)Stop() {
-    this.mEngine.Stop()
+    this.Engine.Stop()
     os.Exit(0)
 }
