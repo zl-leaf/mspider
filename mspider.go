@@ -4,6 +4,7 @@ import(
     "time"
     "github.com/zl-leaf/mspider/config"
     "github.com/zl-leaf/mspider/engine"
+    "github.com/zl-leaf/mspider/engine/msg"
     "github.com/zl-leaf/mspider/scheduler"
     "github.com/zl-leaf/mspider/downloader"
     "github.com/zl-leaf/mspider/spider"
@@ -49,6 +50,18 @@ func (this *MSpider) Load(mConfig *config.Config) error {
 
 func (this *MSpider) RegisterSpider(s *spider.Spider) {
     this.Engine.AddSpider(s)
+}
+
+func (this *MSpider) SetSchedulerMessageHandler(MessageHandler msg.ISchedulerMessageHandler) {
+    this.Engine.SchedulerService.MessageHandler = MessageHandler
+}
+
+func (this *MSpider) SetDownloaderMessageHandler(MessageHandler msg.IDownloaderMessageHandler) {
+    this.Engine.DownloaderService.MessageHandler = MessageHandler
+}
+
+func (this *MSpider) SetSpiderMessageHandler(MessageHandler msg.ISpiderMessageHandler) {
+    this.Engine.SpiderService.MessageHandler = MessageHandler
 }
 
 func (this *MSpider)Start() {
