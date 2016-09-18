@@ -7,3 +7,7 @@ func SetLogPath(LogPath string) {
 func Info(format string, v ...interface{}) {
     mLogger.Info(format, v...)
 }
+
+func Error(format string, v ...interface{}) {
+    mLogger.Error(format, v...)
+}

@@ -21,3 +21,14 @@ func (this *Logger) Info(format string, v ...interface{}) {
     log.Printf(format, v ...)
 
 }
+
+func (this *Logger) Error(format string, v ...interface{}) {
+    logName := time.Now().Format("2006-01-02") + ".log"
+    file, _ := os.OpenFile(logName, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0755)
+    defer file.Close()
+    log.SetOutput(file)
+    log.SetPrefix("[ERROR]")
+
+    log.Printf(format, v ...)
+
+}
