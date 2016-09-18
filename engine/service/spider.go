@@ -3,6 +3,7 @@ import(
     "fmt"
     "time"
     "encoding/json"
+    "github.com/zl-leaf/mspider/engine/msg"
     "github.com/zl-leaf/mspider/spider"
     "github.com/zl-leaf/mspider/logger"
 )
@@ -12,6 +13,7 @@ type SpiderService struct {
     EventPublisher chan string
     Listener *DownloaderService
     State int
+    MessageHandler msg.ISpiderMessageHandler
 }
 
 func (this *SpiderService) Start() error {
@@ -63,19 +65,26 @@ func (this *SpiderService) do(content string) {
     if this.State == StopState {
         return
     }
-    var dresp DownloadResponse
+    var dresp msg.DownloadResponse
     err := json.Unmarshal([]byte(content), &dresp)
     if err != nil {
         return
     }
-    s, err := this.getSpider(dresp.URL)
+    request, err := this.MessageHandler.HandleRequest(dresp)
     if err != nil {
         return
     }
-    s.Do(dresp.URL, dresp.Html)
+    s, err := this.getSpider(request.URL)
+    if err != nil {
+        return
+    }
+    s.Do(request.URL, request.Html)
     defer s.Relase()
-    logger.Info("spider id: %s crawl url: %s.", s.ID, dresp.URL)
-    redirects := s.Redirects()
+    logger.Info("spider id: %s crawl url: %s.", s.ID, request.URL)
+    redirects, err := this.MessageHandler.HandleResponse(s.Redirects())
+    if err != nil {
+        return
+    }
     for _,redirect := range redirects {
         this.EventPublisher <- redirect
     }
@@ -103,5 +112,6 @@ func CreateSpiderService() (spiderService *SpiderService) {
     spiderService = &SpiderService{}
     spiderService.Spiders = make(map[string]*spider.Spider, 0)
     spiderService.EventPublisher = make(chan string)
+    spiderService.MessageHandler = &msg.SpiderMessageHandler{}
     return
 }

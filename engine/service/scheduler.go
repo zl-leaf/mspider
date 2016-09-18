@@ -1,6 +1,7 @@
 package service
 import(
     "time"
+    "github.com/zl-leaf/mspider/engine/msg"
     "github.com/zl-leaf/mspider/scheduler"
 )
 
@@ -9,6 +10,7 @@ type SchedulerService struct {
     EventPublisher chan string
     Listener *SpiderService
     State int
+    MessageHandler msg.ISchedulerMessageHandler
 }
 
 func (this *SchedulerService) Start() error {
@@ -39,8 +41,13 @@ func (this *SchedulerService) listen(listenerChan chan string) {
 
 func (this *SchedulerService) push() {
     for {
-        u,err := this.Scheduler.Head()
+        u, err := this.Scheduler.Head()
 
+        if err != nil {
+            continue
+        }
+
+        u, err = this.MessageHandler.HandleResponse(u)
         if err != nil {
             continue
         }
@@ -51,11 +58,15 @@ func (this *SchedulerService) push() {
 }
 
 func (this *SchedulerService) do(content string) {
-    this.Scheduler.Add(content)
+    u, err := this.MessageHandler.HandleRequest(content)
+    if err == nil {
+        this.Scheduler.Add(u)
+    }
 }
 
 func CreateSchedulerService() (schedulerService *SchedulerService) {
     schedulerService = &SchedulerService{}
     schedulerService.EventPublisher = make(chan string)
+    schedulerService.MessageHandler = &msg.SchedulerMessageHandler{}
     return
 }

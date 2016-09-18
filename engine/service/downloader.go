@@ -3,20 +3,17 @@ import(
     "fmt"
     "time"
     "encoding/json"
+    "github.com/zl-leaf/mspider/engine/msg"
     "github.com/zl-leaf/mspider/downloader"
     "github.com/zl-leaf/mspider/logger"
 )
-
-type DownloadResponse struct {
-    URL string `json:"url"`
-    Html string `json:"html"`
-}
 
 type DownloaderService struct {
     Downloaders map[string]*downloader.Downloader
     EventPublisher chan string
     Listener *SchedulerService
     State int
+    MessageHandler msg.IDownloaderMessageHandler
 }
 
 func (this *DownloaderService) Start() error {
@@ -54,7 +51,10 @@ func (this *DownloaderService) AddDownloader(d *downloader.Downloader) {
 func (this *DownloaderService) listen(listenerChan chan string) {
     for {
         value := <- listenerChan
-        go this.do(value)
+        request, err := this.MessageHandler.HandleRequest(value)
+        if err == nil {
+            go this.do(request)
+        }
     }
 }
 
@@ -72,12 +72,22 @@ func (this *DownloaderService) do(u string) {
     if err != nil {
         return
     }
-    resp := DownloadResponse{URL:u, Html:html}
-    respJson,err := json.Marshal(resp)
-    if err == nil {
-        this.EventPublisher <- string(respJson)
-    }
+    this.response(u, html)
     return
+}
+
+func (this *DownloaderService) response(u, html string) error {
+    resp := msg.DownloadResponse{URL:u, Html:html}
+    resp, err := this.MessageHandler.HandleResponse(resp)
+    if err != nil {
+        return err
+    }
+    respJson,err := json.Marshal(resp)
+    if err != nil {
+        return err
+    }
+    this.EventPublisher <- string(respJson)
+    return nil
 }
 
 func (this *DownloaderService) getDownloader() (dr *downloader.Downloader, err error) {
@@ -99,5 +109,6 @@ func CreateDownloaderService() (downloaderService *DownloaderService) {
     downloaderService = &DownloaderService{}
     downloaderService.Downloaders = make(map[string]*downloader.Downloader, 0)
     downloaderService.EventPublisher = make(chan string)
+    downloaderService.MessageHandler = &msg.DownloaderMessageHandler{}
     return
 }
