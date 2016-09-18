@@ -8,44 +8,43 @@ import (
 )
 
 type Engine struct {
-    mSchedulerService *service.SchedulerService
-    mDownloaderService *service.DownloaderService
-    mSpiderService *service.SpiderService
+    SchedulerService *service.SchedulerService
+    DownloaderService *service.DownloaderService
+    SpiderService *service.SpiderService
 }
 
 func (this *Engine) Init() {
-    ch := make(chan string)
-    this.mSchedulerService = service.CreateSchedulerService(ch)
-    this.mDownloaderService = service.CreateDownloaderService(ch)
-    this.mSpiderService = service.CreateSpiderService(ch)
+    this.SchedulerService = service.CreateSchedulerService()
+    this.DownloaderService = service.CreateDownloaderService()
+    this.SpiderService = service.CreateSpiderService()
 
-    this.mSchedulerService.AddListener(this.mSpiderService)
-    this.mDownloaderService.AddListener(this.mSchedulerService)
-    this.mSpiderService.AddListener(this.mDownloaderService)
+    this.SchedulerService.Listener = this.SpiderService
+    this.DownloaderService.Listener = this.SchedulerService
+    this.SpiderService.Listener = this.DownloaderService
 }
 
 func (this *Engine) SetScheduler(s *scheduler.Scheduler) {
-    this.mSchedulerService.SetScheduler(s)
+    this.SchedulerService.SetScheduler(s)
 }
 
 func (this *Engine) AddDownloader(d *downloader.Downloader) {
-    this.mDownloaderService.AddDownloader(d)
-    logger.Info("add Downloader, id %s.", d.ID())
+    this.DownloaderService.AddDownloader(d)
+    logger.Info("add Downloader, id %s.", d.ID)
 }
 
 func (this *Engine) AddSpider(s *spider.Spider) {
-    this.mSpiderService.AddSpider(s)
-    logger.Info("add spider, id %s.", s.ID())
+    this.SpiderService.AddSpider(s)
+    logger.Info("add spider, id %s.", s.ID)
 }
 
 func (this *Engine) Start() {
-    this.mSchedulerService.Start()
-    this.mDownloaderService.Start()
-    this.mSpiderService.Start()
+    this.SchedulerService.Start()
+    this.DownloaderService.Start()
+    this.SpiderService.Start()
 }
 
 func (this *Engine) Stop() {
-    this.mSchedulerService.Stop()
-    this.mDownloaderService.Stop()
-    this.mSpiderService.Stop()
+    this.SchedulerService.Stop()
+    this.DownloaderService.Stop()
+    this.SpiderService.Stop()
 }

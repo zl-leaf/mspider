@@ -31,16 +31,16 @@ func (this *SpiderService) Stop() error {
     stopChan := make(chan string)
     go func(stopChan chan string) {
         for _,s := range this.Spiders {
-            logger.Info("spider id: %s wait for stop", s.ID())
-            if s.State() != spider.FreeState {
+            logger.Info("spider id: %s wait for stop", s.ID)
+            if s.State != spider.FreeState {
                 for {
                     time.Sleep(time.Duration(1) * time.Second)
-                    if s.State() == spider.FreeState {
+                    if s.State == spider.FreeState {
                         break
                     }
                 }
             }
-            logger.Info("spider id: %s has stop", s.ID())
+            logger.Info("spider id: %s has stop", s.ID)
         }
         stopChan <- "stop"
     }(stopChan)
@@ -49,7 +49,7 @@ func (this *SpiderService) Stop() error {
 }
 
 func (this *SpiderService) AddSpider(s *spider.Spider) {
-    this.Spiders[s.ID()] = s
+    this.Spiders[s.ID] = s
 }
 
 func (this *SpiderService) listen(listenerChan chan string) {
@@ -74,7 +74,7 @@ func (this *SpiderService) do(content string) {
     }
     s.Do(dresp.URL, dresp.Html)
     defer s.Relase()
-    logger.Info("spider id: %s crawl url: %s.", s.ID(), dresp.URL)
+    logger.Info("spider id: %s crawl url: %s.", s.ID, dresp.URL)
     redirects := s.Redirects()
     for _,redirect := range redirects {
         this.EventPublisher <- redirect
@@ -84,7 +84,7 @@ func (this *SpiderService) do(content string) {
 func (this *SpiderService) getSpider(u string) (targetSpider *spider.Spider, err error) {
     matchResult := false
     for _,s := range this.Spiders {
-        if s.State() != spider.FreeState {
+        if s.State != spider.FreeState {
             continue
         }
         if matchResult,_ = s.MatchRules(u); matchResult {

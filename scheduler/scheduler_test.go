@@ -19,8 +19,8 @@ func TestAdd(t *testing.T) {
     testScheduler.Add(testURL)
     testScheduler.Add("https://github.com")
     testScheduler.Add("https://baidu.com")
-    if testScheduler.queue.Len() != 3 {
-        t.Errorf("scheduler queue length error. got %d", testScheduler.queue.Len())
+    if testScheduler.Queue.Len() != 3 {
+        t.Errorf("scheduler queue length error. got %d", testScheduler.Queue.Len())
     }
 }
 

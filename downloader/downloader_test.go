@@ -12,14 +12,10 @@ func TestAutoID(t *testing.T) {
 }
 
 func TestRequest(t *testing.T) {
-    downloaderID := "testDownloader"
-    downloader,err := New(downloaderID)
+    downloader,err := New()
     if err != nil {
         t.Errorf("create downloader error.")
         t.Log(err)
-    }
-    if downloader.ID() != downloaderID {
-        t.Errorf("downloader ID error. got %s", downloader.ID)
     }
 
     url := "http://hao.jobbole.com/python-scrapy/"

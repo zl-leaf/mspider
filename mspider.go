@@ -35,7 +35,7 @@ func (this *MSpider) Load(mConfig *config.Config) error {
     this.mEngine.SetScheduler(s)
 
     for i := 0; i < mConfig.DownloaderNum; i++ {
-        d,_ := downloader.New("")
+        d,_ := downloader.New()
         this.mEngine.AddDownloader(d)
     }
 

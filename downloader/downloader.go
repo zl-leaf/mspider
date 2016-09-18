@@ -12,29 +12,18 @@ const (
 )
 
 type Downloader struct {
-    id string
-    state int
+    ID string
+    State int
 }
 
-func New(id string) (downloader *Downloader, err error) {
-    downloaderID := id
-    if downloaderID == "" {
-        downloaderID = autoID()
-    }
-    downloader = &Downloader{id:downloaderID}
+func New() (downloader *Downloader, err error) {
+    downloaderID := autoID()
+    downloader = &Downloader{ID:downloaderID}
     return
 }
 
-func (this *Downloader)ID() string {
-    return this.id
-}
-
-func (this *Downloader) State() int {
-    return this.state
-}
-
 func (this *Downloader)Request(u string) (html string, err error) {
-    this.state = WorkingState
+    this.State = WorkingState
     client := &http.Client{}
     req, err := http.NewRequest("GET", u, nil)
     req.Header.Add("User-Agent", `Mozilla/5.0 (Windows NT 6.3; WOW64; Trident/7.0; rv:11.0) like Gecko`)
@@ -66,6 +55,6 @@ func (this *Downloader)Request(u string) (html string, err error) {
 }
 
 func (this *Downloader) Relase() error {
-    this.state = FreeState
+    this.State = FreeState
     return nil
 }

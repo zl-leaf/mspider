@@ -33,7 +33,7 @@ func main() {
         startURLs : []string{"http://hao.jobbole.com/python-scrapy"},
         rules : []string{"jobbole.*"},
     }
-    spider,_ := spider.New("", heart)
+    spider,_ := spider.New(heart)
     mspider.RegisterSpider(spider)
 
     mspider.Start()

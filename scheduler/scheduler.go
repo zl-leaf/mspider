@@ -4,22 +4,22 @@ import(
 )
 
 type Scheduler struct {
-    queue *queue.Queue
+    Queue *queue.Queue
     Interval int
 }
 
 func New() (scheduler *Scheduler, err error) {
     scheduler = &Scheduler{}
-    scheduler.queue = queue.New()
+    scheduler.Queue = queue.New()
     return
 }
 
 func (this *Scheduler)Add(url string) {
-    this.queue.Add(url)
+    this.Queue.Add(url)
 }
 
 func (this *Scheduler)Head() (value string, err error) {
-    e, err := this.queue.Head()
+    e, err := this.Queue.Head()
     if err == nil {
         value = e.Value.(string)
     }

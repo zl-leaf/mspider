@@ -30,16 +30,16 @@ func (this *DownloaderService) Stop() error {
     stopChan := make(chan string)
     go func(stopChan chan string) {
         for _,d := range this.Downloaders {
-            logger.Info("downloader id: %s wait for stop", d.ID())
-            if d.State() != downloader.FreeState {
+            logger.Info("downloader id: %s wait for stop", d.ID)
+            if d.State != downloader.FreeState {
                 for {
                     time.Sleep(time.Duration(1) * time.Second)
-                    if d.State() == downloader.FreeState {
+                    if d.State == downloader.FreeState {
                         break
                     }
                 }
             }
-            logger.Info("downloader id: %s has stop", d.ID())
+            logger.Info("downloader id: %s has stop", d.ID)
         }
         stopChan <- "stop"
     }(stopChan)
@@ -48,7 +48,7 @@ func (this *DownloaderService) Stop() error {
 }
 
 func (this *DownloaderService) AddDownloader(d *downloader.Downloader) {
-    this.Downloaders[d.ID()] = d
+    this.Downloaders[d.ID] = d
 }
 
 func (this *DownloaderService) listen(listenerChan chan string) {
@@ -68,7 +68,7 @@ func (this *DownloaderService) do(u string) {
     }
     html,err := d.Request(u)
     defer d.Relase()
-    logger.Info("downloader id: %s download url: %s.", d.ID(), u)
+    logger.Info("downloader id: %s download url: %s.", d.ID, u)
     if err != nil {
         return
     }
@@ -83,7 +83,7 @@ func (this *DownloaderService) do(u string) {
 func (this *DownloaderService) getDownloader() (dr *downloader.Downloader, err error) {
     findResult := false
     for _,d := range this.Downloaders {
-        if d.State() == downloader.FreeState {
+        if d.State == downloader.FreeState {
             findResult = true
             dr = d
             break

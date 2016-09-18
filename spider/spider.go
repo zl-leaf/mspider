@@ -15,54 +15,42 @@ type SpiderHeart interface {
 }
 
 type Spider struct {
-    id string
-    url string
-    html string
-    state int
-    heart SpiderHeart
+    ID string
+    URL string
+    Html string
+    State int
+    Heart SpiderHeart
 }
 
-func New(id string, heart SpiderHeart) (spider *Spider, err error) {
-    spiderID := id
-    if spiderID == "" {
-        spiderID = autoID()
-    }
-
-    spider = &Spider{id:spiderID, state:FreeState, heart:heart}
+func New(heart SpiderHeart) (spider *Spider, err error) {
+    spiderID := autoID()
+    spider = &Spider{ID:spiderID, State:FreeState, Heart:heart}
     return
 }
 
-func (this *Spider) ID() string {
-    return this.id
-}
-
 func (this *Spider) Rules() []string {
-    return this.heart.Rules()
+    return this.Heart.Rules()
 }
 
 func (this *Spider) StartURLs() []string {
-    return this.heart.StartURLs()
+    return this.Heart.StartURLs()
 }
 
 func (this *Spider) Do(u string, content string) error {
-    this.url = u
-    this.html = content
-    this.state = WorkingState
-    return this.heart.Parse()
+    this.URL = u
+    this.Html = content
+    this.State = WorkingState
+    return this.Heart.Parse()
 }
 
 func (this *Spider) Relase() error {
-    this.state = FreeState
+    this.State = FreeState
     return nil
 }
 
 func (this *Spider) Redirects() []string {
-    redirects := GetRedirectURL(this.html)
+    redirects := GetRedirectURL(this.Html)
     return redirects
-}
-
-func (this *Spider) State() int {
-    return this.state
 }
 
 func (this *Spider) MatchRules(u string) (result bool, err error) {

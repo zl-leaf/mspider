@@ -25,15 +25,10 @@ func TestNewSpider(t *testing.T) {
         startURLs : []string{"http://hao.jobbole.com/python-scrapy"},
         rules : []string{"jobbole.*"},
     }
-    spiderID := "testSpider"
-    testSpider,err := New(spiderID, heart)
+    testSpider,err := New(heart)
 
     if err != nil {
         t.Error(err)
-    }
-
-    if testSpider.ID() != spiderID {
-        t.Errorf("got spider error, should got %s, but got %s", spiderID, testSpider.ID())
     }
 
     if len(testSpider.StartURLs()) == 0 {
@@ -50,7 +45,7 @@ func TestRules(t *testing.T) {
         startURLs : []string{"http://hao.jobbole.com/python-scrapy"},
         rules : []string{"jobbole.*"},
     }
-    testSpider,_ := New("", heart)
+    testSpider,_ := New(heart)
     testURL := "www.jobbole.com";
     matResult,_ := testSpider.MatchRules(testURL)
     if !matResult {
