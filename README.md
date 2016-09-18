@@ -52,6 +52,43 @@ func main() {
 }
 ```
 
+###### 设置消息组件（在自定义的组件中进行数据验证或格式设置）
+```go
+type SchedulerMessageHandler struct {}
+func (this *SchedulerMessageHandler) HandleRequest(req string) (value string, err error) {
+    value = req
+    return
+}
+func (this *SchedulerMessageHandler) HandleResponse(resp string) (value string, err error) {
+    value = resp
+    return
+}
+
+type DownloaderMessageHandler struct {}
+func (this *DownloaderMessageHandler) HandleRequest(req string) (value string, err error) {
+    value = req
+    return
+}
+func (this *DownloaderMessageHandler) HandleResponse(resp DownloadResponse) (value DownloadResponse, err error) {
+    value = resp
+    return
+}
+
+type SpiderMessageHandler struct {}
+func (this *SpiderMessageHandler) HandleRequest(req DownloadResponse) (value DownloadResponse, err error) {
+    value = req
+    return
+}
+func (this *SpiderMessageHandler) HandleResponse(resp []string) (value []string, err error) {
+    value = resp
+    return
+}
+
+mspider.SetSchedulerMessageHandler(&SchedulerMessageHandler{})
+mspider.SetDownloaderMessageHandler(&DownloaderMessageHandler{})
+mspider.SetSpiderMessageHandler(&SpiderMessageHandler{})
+```
+
 ###### 构建并运行
 ```bash
     go build main.go
