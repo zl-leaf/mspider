@@ -8,34 +8,29 @@ import(
 )
 
 type SpiderService struct {
-    mSpiders map[string]*spider.Spider
-    engineListener chan string
-    eventPublisher chan string
-    listener IService
-    state int
-}
-
-func (this *SpiderService) EventPublisher() chan string {
-    return this.eventPublisher
+    Spiders map[string]*spider.Spider
+    EventPublisher chan string
+    Listener *DownloaderService
+    State int
 }
 
 func (this *SpiderService) Start() error {
-    this.state = WorkingState
-    go this.listen(this.listener.EventPublisher())
+    this.State = WorkingState
+    go this.listen(this.Listener.EventPublisher)
 
-    for _,s := range this.mSpiders {
+    for _,s := range this.Spiders {
         for _,u := range s.StartURLs() {
-            this.eventPublisher <- u
+            this.EventPublisher <- u
         }
     }
     return nil
 }
 
 func (this *SpiderService) Stop() error {
-    this.state = StopState
+    this.State = StopState
     stopChan := make(chan string)
     go func(stopChan chan string) {
-        for _,s := range this.mSpiders {
+        for _,s := range this.Spiders {
             logger.Info("spider id: %s wait for stop", s.ID())
             if s.State() != spider.FreeState {
                 for {
@@ -53,13 +48,8 @@ func (this *SpiderService) Stop() error {
     return nil
 }
 
-func (this *SpiderService) AddListener(s IService) error {
-    this.listener = s
-    return nil
-}
-
 func (this *SpiderService) AddSpider(s *spider.Spider) {
-    this.mSpiders[s.ID()] = s
+    this.Spiders[s.ID()] = s
 }
 
 func (this *SpiderService) listen(listenerChan chan string) {
@@ -70,7 +60,7 @@ func (this *SpiderService) listen(listenerChan chan string) {
 }
 
 func (this *SpiderService) do(content string) {
-    if this.state == StopState {
+    if this.State == StopState {
         return
     }
     var dresp DownloadResponse
@@ -87,13 +77,13 @@ func (this *SpiderService) do(content string) {
     logger.Info("spider id: %s crawl url: %s.", s.ID(), dresp.URL)
     redirects := s.Redirects()
     for _,redirect := range redirects {
-        this.eventPublisher <- redirect
+        this.EventPublisher <- redirect
     }
 }
 
 func (this *SpiderService) getSpider(u string) (targetSpider *spider.Spider, err error) {
     matchResult := false
-    for _,s := range this.mSpiders {
+    for _,s := range this.Spiders {
         if s.State() != spider.FreeState {
             continue
         }
@@ -109,10 +99,9 @@ func (this *SpiderService) getSpider(u string) (targetSpider *spider.Spider, err
     return
 }
 
-func CreateSpiderService(engineListener chan string) (spiderService *SpiderService) {
+func CreateSpiderService() (spiderService *SpiderService) {
     spiderService = &SpiderService{}
-    spiderService.mSpiders = make(map[string]*spider.Spider, 0)
-    spiderService.engineListener = engineListener
-    spiderService.eventPublisher = make(chan string)
+    spiderService.Spiders = make(map[string]*spider.Spider, 0)
+    spiderService.EventPublisher = make(chan string)
     return
 }

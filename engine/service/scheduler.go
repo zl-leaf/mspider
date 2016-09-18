@@ -5,41 +5,31 @@ import(
 )
 
 type SchedulerService struct {
-    mScheduler *scheduler.Scheduler
-    engineListener chan string
-    eventPublisher chan string
-    listener IService
-    state int
-}
-
-func (this *SchedulerService) EventPublisher() chan string {
-    return this.eventPublisher
+    Scheduler *scheduler.Scheduler
+    EventPublisher chan string
+    Listener *SpiderService
+    State int
 }
 
 func (this *SchedulerService) Start() error {
-    this.state = WorkingState
-    go this.listen(this.listener.EventPublisher())
+    this.State = WorkingState
+    go this.listen(this.Listener.EventPublisher)
     go this.push()
     return nil
 }
 
 func (this *SchedulerService) Stop() error {
-    this.state = StopState
-    return nil
-}
-
-func (this *SchedulerService) AddListener(s IService) error {
-    this.listener = s
+    this.State = StopState
     return nil
 }
 
 func (this *SchedulerService) SetScheduler(s *scheduler.Scheduler) {
-    this.mScheduler = s
+    this.Scheduler = s
 }
 
 func (this *SchedulerService) listen(listenerChan chan string) {
     for {
-        if this.state == StopState {
+        if this.State == StopState {
             break
         }
         value := <- listenerChan
@@ -49,24 +39,23 @@ func (this *SchedulerService) listen(listenerChan chan string) {
 
 func (this *SchedulerService) push() {
     for {
-        u,err := this.mScheduler.Head()
+        u,err := this.Scheduler.Head()
 
         if err != nil {
             continue
         }
 
-        this.eventPublisher <- u
-        time.Sleep(time.Duration(this.mScheduler.Interval))
+        this.EventPublisher <- u
+        time.Sleep(time.Duration(this.Scheduler.Interval))
     }
 }
 
 func (this *SchedulerService) do(content string) {
-    this.mScheduler.Add(content)
+    this.Scheduler.Add(content)
 }
 
-func CreateSchedulerService(engineListener chan string) (schedulerService *SchedulerService) {
+func CreateSchedulerService() (schedulerService *SchedulerService) {
     schedulerService = &SchedulerService{}
-    schedulerService.engineListener = engineListener
-    schedulerService.eventPublisher = make(chan string)
+    schedulerService.EventPublisher = make(chan string)
     return
 }
