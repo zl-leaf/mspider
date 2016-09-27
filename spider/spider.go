@@ -11,7 +11,7 @@ const (
 type SpiderHeart interface {
     StartURLs() []string
     Rules() []string
-    Parse() error
+    Parse(url, content string) error
 }
 
 type Spider struct {
@@ -40,7 +40,7 @@ func (this *Spider) Do(u string, content string) error {
     this.URL = u
     this.Html = content
     this.State = WorkingState
-    return this.Heart.Parse()
+    return this.Heart.Parse(u, content)
 }
 
 func (this *Spider) Relase() error {

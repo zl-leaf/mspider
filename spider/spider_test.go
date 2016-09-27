@@ -16,7 +16,7 @@ func (this *TestSpiderHeart) Rules() []string {
     return this.rules
 }
 
-func (this *TestSpiderHeart) Parse() error {
+func (this *TestSpiderHeart) Parse(url, content string) error {
     return nil
 }
 
