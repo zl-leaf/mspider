@@ -27,6 +27,12 @@ func (this *MSpider) init() {
 }
 
 func (this *MSpider) Load(mConfig *config.Config) error {
+    if mConfig.LogPath != "" {
+        logger.SetLogPath(mConfig.LogPath)
+    } else {
+        logger.SetLogPath("./")
+    }
+
     s,_ := scheduler.New()
     if mConfig.SpiderInterval > 0 {
         s.Interval = mConfig.SpiderInterval
@@ -38,12 +44,6 @@ func (this *MSpider) Load(mConfig *config.Config) error {
     for i := 0; i < mConfig.DownloaderNum; i++ {
         d,_ := downloader.New()
         this.Engine.AddDownloader(d)
-    }
-
-    if mConfig.LogPath != "" {
-        logger.SetLogPath(mConfig.LogPath)
-    } else {
-        logger.SetLogPath("./")
     }
     return nil
 }
