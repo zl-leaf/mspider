@@ -27,7 +27,7 @@ func (this *DemoSpiderHeart) Rules() []string {
     return this.rules
 }
 
-func (this *DemoSpiderHeart)Parse() error {
+func (this *DemoSpiderHeart)Parse(url, content string) error {
     // TODO
     return nil
 }
