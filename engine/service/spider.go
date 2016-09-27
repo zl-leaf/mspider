@@ -33,7 +33,7 @@ func (this *SpiderService) Stop() error {
     stopChan := make(chan string)
     go func(stopChan chan string) {
         for _,s := range this.Spiders {
-            logger.Info("spider id: %s wait for stop", s.ID)
+            logger.Info(logger.SYSTEM, "spider id: %s wait for stop", s.ID)
             if s.State != spider.FreeState {
                 for {
                     time.Sleep(time.Duration(1) * time.Second)
@@ -42,7 +42,7 @@ func (this *SpiderService) Stop() error {
                     }
                 }
             }
-            logger.Info("spider id: %s has stop", s.ID)
+            logger.Info(logger.SYSTEM, "spider id: %s has stop", s.ID)
         }
         stopChan <- "stop"
     }(stopChan)
@@ -80,7 +80,7 @@ func (this *SpiderService) do(content string) {
     }
     s.Do(request.URL, request.Html)
     defer s.Relase()
-    logger.Info("spider id: %s crawl url: %s.", s.ID, request.URL)
+    logger.Info(logger.SYSTEM, "spider id: %s crawl url: %s.", s.ID, request.URL)
     redirects, err := this.MessageHandler.HandleResponse(s.Redirects())
     if err != nil {
         return

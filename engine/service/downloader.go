@@ -27,7 +27,7 @@ func (this *DownloaderService) Stop() error {
     stopChan := make(chan string)
     go func(stopChan chan string) {
         for _,d := range this.Downloaders {
-            logger.Info("downloader id: %s wait for stop", d.ID)
+            logger.Info(logger.SYSTEM, "downloader id: %s wait for stop", d.ID)
             if d.State != downloader.FreeState {
                 for {
                     time.Sleep(time.Duration(1) * time.Second)
@@ -36,7 +36,7 @@ func (this *DownloaderService) Stop() error {
                     }
                 }
             }
-            logger.Info("downloader id: %s has stop", d.ID)
+            logger.Info(logger.SYSTEM, "downloader id: %s has stop", d.ID)
         }
         stopChan <- "stop"
     }(stopChan)
@@ -68,7 +68,7 @@ func (this *DownloaderService) do(u string) {
     }
     html,err := d.Request(u)
     defer d.Relase()
-    logger.Info("downloader id: %s download url: %s.", d.ID, u)
+    logger.Info(logger.SYSTEM, "downloader id: %s download url: %s.", d.ID, u)
     if err != nil {
         return
     }

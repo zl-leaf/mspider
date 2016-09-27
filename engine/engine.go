@@ -29,12 +29,12 @@ func (this *Engine) SetScheduler(s *scheduler.Scheduler) {
 
 func (this *Engine) AddDownloader(d *downloader.Downloader) {
     this.DownloaderService.AddDownloader(d)
-    logger.Info("add Downloader, id %s.", d.ID)
+    logger.Info(logger.SYSTEM, "add Downloader, id %s.", d.ID)
 }
 
 func (this *Engine) AddSpider(s *spider.Spider) {
     this.SpiderService.AddSpider(s)
-    logger.Info("add spider, id %s.", s.ID)
+    logger.Info(logger.SYSTEM, "add spider, id %s.", s.ID)
 }
 
 func (this *Engine) Start() {
