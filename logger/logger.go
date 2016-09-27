@@ -2,33 +2,42 @@ package logger
 import(
     "os"
     "log"
-    "time"
+    "path/filepath"
 )
 
 type Logger struct {
+    Level string
     LogPath string
 }
 
-var mLogger *Logger = &Logger{}
+var systemLogger *Logger = &Logger{Level:SYSTEM}
+var userLogger *Logger = &Logger{Level:USER}
 
 func (this *Logger) Info(format string, v ...interface{}) {
-    logName := time.Now().Format("2006-01-02") + ".log"
-    file, _ := os.OpenFile(logName, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0755)
+    actualPath := filepath.Join(this.LogPath, this.LogName())
+    file, _ := openLogFile(actualPath)
     defer file.Close()
     log.SetOutput(file)
     log.SetPrefix("[INFO]")
 
     log.Printf(format, v ...)
-
 }
 
 func (this *Logger) Error(format string, v ...interface{}) {
-    logName := time.Now().Format("2006-01-02") + ".log"
-    file, _ := os.OpenFile(logName, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0755)
+    actualPath := filepath.Join(this.LogPath, this.LogName())
+    file, _ := openLogFile(actualPath)
     defer file.Close()
     log.SetOutput(file)
     log.SetPrefix("[ERROR]")
 
     log.Printf(format, v ...)
+}
 
+func (this *Logger) LogName() string {
+    return this.Level + ".log"
+}
+
+func openLogFile(path string) (*os.File, error) {
+    file, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0755)
+    return file, err
 }
