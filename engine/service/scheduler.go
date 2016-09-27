@@ -51,7 +51,9 @@ func (this *SchedulerService) push() {
         if err != nil {
             continue
         }
-
+        if this.State == StopState {
+            break
+        }
         this.EventPublisher <- u
         time.Sleep(time.Duration(this.Scheduler.Interval))
     }

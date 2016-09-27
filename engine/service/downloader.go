@@ -68,8 +68,11 @@ func (this *DownloaderService) do(u string) {
     }
     html,err := d.Request(u)
     defer d.Relase()
-    logger.Info(logger.SYSTEM, "downloader id: %s download url: %s.", d.ID, u)
     if err != nil {
+        return
+    }
+    logger.Info(logger.SYSTEM, "downloader id: %s download url: %s.", d.ID, u)
+    if this.State == StopState {
         return
     }
     this.response(u, html)

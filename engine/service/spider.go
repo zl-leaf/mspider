@@ -86,6 +86,9 @@ func (this *SpiderService) do(content string) {
         return
     }
     for _,redirect := range redirects {
+        if this.State == StopState {
+            break
+        }
         this.EventPublisher <- redirect
     }
 }
