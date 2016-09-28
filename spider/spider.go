@@ -1,6 +1,8 @@
 package spider
 import(
     "regexp"
+    "fmt"
+    "net/url"
 )
 
 const (
@@ -37,6 +39,9 @@ func (this *Spider) StartURLs() []string {
 }
 
 func (this *Spider) Do(u string, content string) error {
+    if _,err := url.Parse(u); err != nil {
+        return fmt.Errorf("url:%s is illegal")
+    }
     this.URL = u
     this.Html = content
     this.State = WorkingState
@@ -49,7 +54,17 @@ func (this *Spider) Relase() error {
 }
 
 func (this *Spider) Redirects() []string {
-    redirects := GetRedirectURL(this.Html)
+    hrefs := GetRedirectURL(this.Html)
+    baseURL, _ := url.Parse(this.URL)
+    redirects := make([]string, 0)
+    for _, href := range hrefs {
+        hrefURL, err := url.Parse(href)
+        if err != nil {
+            continue
+        }
+        redirect := baseURL.ResolveReference(hrefURL).String()
+        redirects = append(redirects, redirect)
+    }
     return redirects
 }
 
