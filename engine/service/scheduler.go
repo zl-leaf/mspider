@@ -3,6 +3,7 @@ import(
     "time"
     "github.com/zl-leaf/mspider/engine/msg"
     "github.com/zl-leaf/mspider/scheduler"
+    "github.com/zl-leaf/mspider/logger"
 )
 
 type SchedulerService struct {
@@ -44,11 +45,13 @@ func (this *SchedulerService) push() {
         u, err := this.Scheduler.Head()
 
         if err != nil {
+            logger.Error(logger.SYSTEM, err.Error())
             continue
         }
 
         u, err = this.MessageHandler.HandleResponse(u)
         if err != nil {
+            logger.Error(logger.SYSTEM, err.Error())
             continue
         }
         if this.State == StopState {
@@ -61,9 +64,11 @@ func (this *SchedulerService) push() {
 
 func (this *SchedulerService) do(content string) {
     u, err := this.MessageHandler.HandleRequest(content)
-    if err == nil {
-        this.Scheduler.Add(u)
+    if err != nil {
+        logger.Error(logger.SYSTEM, err.Error())
+        return
     }
+    this.Scheduler.Add(u)
 }
 
 func CreateSchedulerService() (schedulerService *SchedulerService) {

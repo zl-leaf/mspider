@@ -57,25 +57,29 @@ func (this *SpiderService) AddSpider(s *spider.Spider) {
 func (this *SpiderService) listen(listenerChan chan string) {
     for {
         value := <- listenerChan
-        go this.do(value)
+        var requestData msg.DownloadResponse
+        err := json.Unmarshal([]byte(value), &requestData)
+        if err != nil {
+            logger.Error(logger.SYSTEM, err.Error())
+            continue
+        }
+        request, err := this.MessageHandler.HandleRequest(requestData)
+        if err != nil {
+            logger.Error(logger.SYSTEM, err.Error())
+            continue
+        }
+        go this.do(request)
     }
 }
 
-func (this *SpiderService) do(content string) {
+func (this *SpiderService) do(request msg.DownloadResponse) {
     if this.State == StopState {
         return
     }
-    var dresp msg.DownloadResponse
-    err := json.Unmarshal([]byte(content), &dresp)
-    if err != nil {
-        return
-    }
-    request, err := this.MessageHandler.HandleRequest(dresp)
-    if err != nil {
-        return
-    }
+
     s, err := this.getSpider(request.URL)
     if err != nil {
+        logger.Error(logger.SYSTEM, err.Error())
         return
     }
     s.Do(request.URL, request.Html)
@@ -83,6 +87,7 @@ func (this *SpiderService) do(content string) {
     logger.Info(logger.SYSTEM, "spider id: %s crawl url: %s.", s.ID, request.URL)
     redirects, err := this.MessageHandler.HandleResponse(s.Redirects())
     if err != nil {
+        logger.Error(logger.SYSTEM, err.Error())
         return
     }
     for _,redirect := range redirects {

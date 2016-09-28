@@ -52,9 +52,12 @@ func (this *DownloaderService) listen(listenerChan chan string) {
     for {
         value := <- listenerChan
         request, err := this.MessageHandler.HandleRequest(value)
-        if err == nil {
-            go this.do(request)
+        if err != nil {
+            logger.Error(logger.SYSTEM, err.Error())
+            continue
         }
+
+        go this.do(request)
     }
 }
 
@@ -64,18 +67,23 @@ func (this *DownloaderService) do(u string) {
     }
     d,err := this.getDownloader()
     if err != nil {
+        logger.Error(logger.SYSTEM, err.Error())
         return
     }
     html,err := d.Request(u)
     defer d.Relase()
     if err != nil {
+        logger.Error(logger.SYSTEM, err.Error())
         return
     }
     logger.Info(logger.SYSTEM, "downloader id: %s download url: %s.", d.ID, u)
     if this.State == StopState {
         return
     }
-    this.response(u, html)
+    err = this.response(u, html)
+    if err != nil {
+        logger.Error(logger.SYSTEM, err.Error())
+    }
     return
 }
 
