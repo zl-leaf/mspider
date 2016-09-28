@@ -14,14 +14,18 @@ func New() (scheduler *Scheduler, err error) {
     return
 }
 
-func (this *Scheduler)Add(url string) {
+func (this *Scheduler) Add(url string) {
     this.Queue.Add(url)
 }
 
-func (this *Scheduler)Head() (value string, err error) {
+func (this *Scheduler) Head() (value string, err error) {
     e, err := this.Queue.Head()
     if err == nil {
         value = e.Value.(string)
     }
     return
+}
+
+func (this *Scheduler) Empty() bool {
+    return this.Queue.Empty()
 }

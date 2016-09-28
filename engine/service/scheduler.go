@@ -42,6 +42,9 @@ func (this *SchedulerService) listen(listenerChan chan string) {
 
 func (this *SchedulerService) push() {
     for {
+        if this.Scheduler.Empty() {
+            continue
+        }
         u, err := this.Scheduler.Head()
 
         if err != nil {
