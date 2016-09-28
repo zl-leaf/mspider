@@ -26,6 +26,9 @@ func (this *Downloader)Request(u string) (html string, err error) {
     this.State = WorkingState
     client := &http.Client{}
     req, err := http.NewRequest("GET", u, nil)
+    if err != nil {
+        return
+    }
     req.Header.Add("User-Agent", `Mozilla/5.0 (Windows NT 6.3; WOW64; Trident/7.0; rv:11.0) like Gecko`)
     resp, err := client.Do(req)
     if err != nil {
