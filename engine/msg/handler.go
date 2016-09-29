@@ -1,7 +1,7 @@
 package msg
 
 type ISchedulerMessageHandler interface {
-    HandleRequest(req string) (string, error)
+    HandleRequest(req SpiderResult) (SpiderResult, error)
     HandleResponse(resp string) (string, error)
 }
 
@@ -12,12 +12,12 @@ type IDownloaderMessageHandler interface {
 
 type ISpiderMessageHandler interface {
     HandleRequest(req DownloadResult) (DownloadResult, error)
-    HandleResponse(resp []string) ([]string, error)
+    HandleResponse(resp SpiderResult) (SpiderResult, error)
 }
 
 type SchedulerMessageHandler struct {}
 
-func (this *SchedulerMessageHandler) HandleRequest(req string) (value string, err error) {
+func (this *SchedulerMessageHandler) HandleRequest(req SpiderResult) (value SpiderResult, err error) {
     value = req
     return
 }
@@ -46,7 +46,7 @@ func (this *SpiderMessageHandler) HandleRequest(req DownloadResult) (value Downl
     return
 }
 
-func (this *SpiderMessageHandler) HandleResponse(resp []string) (value []string, err error) {
+func (this *SpiderMessageHandler) HandleResponse(resp SpiderResult) (value SpiderResult, err error) {
     value = resp
     return
 }

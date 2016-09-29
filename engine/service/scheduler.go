@@ -30,13 +30,13 @@ func (this *SchedulerService) SetScheduler(s *scheduler.Scheduler) {
     this.Scheduler = s
 }
 
-func (this *SchedulerService) listen(listenerChan chan string) {
+func (this *SchedulerService) listen(listenerChan chan msg.SpiderResult) {
     for {
         if this.State == StopState {
             break
         }
-        value := <- listenerChan
-        this.do(value)
+        request := <- listenerChan
+        this.do(request)
     }
 }
 
@@ -65,13 +65,15 @@ func (this *SchedulerService) push() {
     }
 }
 
-func (this *SchedulerService) do(content string) {
-    u, err := this.MessageHandler.HandleRequest(content)
+func (this *SchedulerService) do(request msg.SpiderResult) {
+    request, err := this.MessageHandler.HandleRequest(request)
     if err != nil {
         logger.Error(logger.SYSTEM, err.Error())
         return
     }
-    this.Scheduler.Add(u)
+    for _, u := range request.Data {
+        this.Scheduler.Add(u)
+    }
 }
 
 func CreateSchedulerService() (schedulerService *SchedulerService) {

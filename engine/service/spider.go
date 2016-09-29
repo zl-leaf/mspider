@@ -15,7 +15,7 @@ const(
 
 type SpiderService struct {
     Spiders map[string]*spider.Spider
-    EventPublisher chan string
+    EventPublisher chan msg.SpiderResult
     Listener *DownloaderService
     State int
     MessageHandler msg.ISpiderMessageHandler
@@ -26,9 +26,8 @@ func (this *SpiderService) Start() error {
     go this.listen(this.Listener.EventPublisher)
 
     for _,s := range this.Spiders {
-        for _,u := range s.StartURLs() {
-            this.EventPublisher <- u
-        }
+        result := msg.SpiderResult{Data:s.StartURLs()}
+        this.EventPublisher <- result
     }
     return nil
 }
@@ -88,17 +87,16 @@ func (this *SpiderService) do(request msg.DownloadResult) {
     }
     defer s.Relase()
     logger.Info(logger.SYSTEM, "spider id: %s crawl url: %s.", s.ID, request.URL)
-    redirects, err := this.MessageHandler.HandleResponse(s.Redirects())
+    result := msg.SpiderResult{Data:s.Redirects()}
+    result, err = this.MessageHandler.HandleResponse(result)
     if err != nil {
         logger.Error(logger.SYSTEM, err.Error())
         return
     }
-    for _,redirect := range redirects {
-        if this.State == StopState {
-            break
-        }
-        this.EventPublisher <- redirect
+    if this.State == StopState {
+        return
     }
+    this.EventPublisher <- result
 }
 
 func (this *SpiderService) getSpider(u string) (targetSpider *spider.Spider, err error) {
@@ -135,7 +133,7 @@ func (this *SpiderService) getSpider(u string) (targetSpider *spider.Spider, err
 func CreateSpiderService() (spiderService *SpiderService) {
     spiderService = &SpiderService{}
     spiderService.Spiders = make(map[string]*spider.Spider, 0)
-    spiderService.EventPublisher = make(chan string)
+    spiderService.EventPublisher = make(chan msg.SpiderResult)
     spiderService.MessageHandler = &msg.SpiderMessageHandler{}
     return
 }
