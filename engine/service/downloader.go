@@ -8,6 +8,12 @@ import(
     "github.com/zl-leaf/mspider/logger"
 )
 
+const(
+    stopDownloaderWait = 1
+    getDownloaderRetryNum = 3
+    getDownloaderRetryWait = 1
+)
+
 type DownloaderService struct {
     Downloaders map[string]*downloader.Downloader
     EventPublisher chan string
@@ -30,7 +36,7 @@ func (this *DownloaderService) Stop() error {
             logger.Info(logger.SYSTEM, "downloader id: %s wait for stop", d.ID)
             if d.State != downloader.FreeState {
                 for {
-                    time.Sleep(time.Duration(1) * time.Second)
+                    time.Sleep(time.Duration(stopDownloaderWait) * time.Second)
                     if d.State == downloader.FreeState {
                         break
                     }
@@ -97,21 +103,30 @@ func (this *DownloaderService) response(u, html string) error {
     if err != nil {
         return err
     }
+
     this.EventPublisher <- string(respJson)
     return nil
 }
 
 func (this *DownloaderService) getDownloader() (dr *downloader.Downloader, err error) {
     findResult := false
-    for _,d := range this.Downloaders {
-        if d.State == downloader.FreeState {
-            findResult = true
-            dr = d
+    for i := 0; i < getDownloaderRetryNum; i++ {
+        for _,d := range this.Downloaders {
+            if d.State == downloader.FreeState {
+                findResult = true
+                dr = d
+                break
+            }
+        }
+        if findResult {
             break
+        } else {
+            time.Sleep(time.Duration(getDownloaderRetryWait) * time.Second)
         }
     }
+
     if !findResult {
-        err = fmt.Errorf("can not find suitable downloader")
+        err = fmt.Errorf("can not find free downloader")
     }
     return
 }

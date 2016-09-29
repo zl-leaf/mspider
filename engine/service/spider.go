@@ -8,6 +8,12 @@ import(
     "github.com/zl-leaf/mspider/logger"
 )
 
+const(
+    stopSpiderWait = 1
+    getSpiderRetryNum = 3
+    getSpiderRetryWait = 1
+)
+
 type SpiderService struct {
     Spiders map[string]*spider.Spider
     EventPublisher chan string
@@ -36,7 +42,7 @@ func (this *SpiderService) Stop() error {
             logger.Info(logger.SYSTEM, "spider id: %s wait for stop", s.ID)
             if s.State != spider.FreeState {
                 for {
-                    time.Sleep(time.Duration(1) * time.Second)
+                    time.Sleep(time.Duration(stopSpiderWait) * time.Second)
                     if s.State == spider.FreeState {
                         break
                     }
@@ -82,7 +88,11 @@ func (this *SpiderService) do(request msg.DownloadResponse) {
         logger.Error(logger.SYSTEM, err.Error())
         return
     }
-    s.Do(request.URL, request.Html)
+    err = s.Do(request.URL, request.Html)
+    if err != nil {
+        logger.Error(logger.SYSTEM, err.Error())
+        return
+    }
     defer s.Relase()
     logger.Info(logger.SYSTEM, "spider id: %s crawl url: %s.", s.ID, request.URL)
     redirects, err := this.MessageHandler.HandleResponse(s.Redirects())
@@ -99,19 +109,32 @@ func (this *SpiderService) do(request msg.DownloadResponse) {
 }
 
 func (this *SpiderService) getSpider(u string) (targetSpider *spider.Spider, err error) {
-    matchResult := false
-    for _,s := range this.Spiders {
-        if s.State != spider.FreeState {
-            continue
+    findResult := false
+    for i := 0; i < getSpiderRetryNum; i++ {
+        matchResult := false
+        for _,s := range this.Spiders {
+            if matchResult,_ = s.MatchRules(u); matchResult {
+                if s.State == spider.FreeState {
+                    targetSpider = s
+                    findResult = true
+                    break
+                }
+            }
         }
-        if matchResult,_ = s.MatchRules(u); matchResult {
-            targetSpider = s
+
+        if !matchResult {
+            err = fmt.Errorf("can not find suitable spider for url %s", u)
             break
+        }
+        if findResult {
+            break
+        } else {
+            time.Sleep(time.Duration(getSpiderRetryWait) * time.Second)
         }
     }
 
-    if !matchResult {
-        err = fmt.Errorf("can not find suitable spider for url %s", u)
+    if !findResult {
+        err = fmt.Errorf("can not find free spider")
     }
     return
 }
