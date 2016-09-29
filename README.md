@@ -55,7 +55,7 @@ func main() {
 ###### 设置消息组件（在自定义的组件中进行数据验证或格式设置）
 ```go
 type SchedulerMessageHandler struct {}
-func (this *SchedulerMessageHandler) HandleRequest(req string) (value string, err error) {
+func (this *SchedulerMessageHandler) HandleRequest(req msg.SpiderResult) (value msg.SpiderResult, err error) {
     value = req
     return
 }
@@ -69,17 +69,17 @@ func (this *DownloaderMessageHandler) HandleRequest(req string) (value string, e
     value = req
     return
 }
-func (this *DownloaderMessageHandler) HandleResponse(resp DownloadResult) (value DownloadResult, err error) {
+func (this *DownloaderMessageHandler) HandleResponse(resp msg.DownloadResult) (value msg.DownloadResult, err error) {
     value = resp
     return
 }
 
 type SpiderMessageHandler struct {}
-func (this *SpiderMessageHandler) HandleRequest(req DownloadResult) (value DownloadResult, err error) {
+func (this *SpiderMessageHandler) HandleRequest(req msg.DownloadResult) (value msg.DownloadResult, err error) {
     value = req
     return
 }
-func (this *SpiderMessageHandler) HandleResponse(resp []string) (value []string, err error) {
+func (this *SpiderMessageHandler) HandleResponse(resp msg.SpiderResult) (value msg.SpiderResult, err error) {
     value = resp
     return
 }
