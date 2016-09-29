@@ -2,7 +2,6 @@ package service
 import(
     "fmt"
     "time"
-    "encoding/json"
     "github.com/zl-leaf/mspider/engine/msg"
     "github.com/zl-leaf/mspider/spider"
     "github.com/zl-leaf/mspider/logger"
@@ -60,16 +59,10 @@ func (this *SpiderService) AddSpider(s *spider.Spider) {
     this.Spiders[s.ID] = s
 }
 
-func (this *SpiderService) listen(listenerChan chan string) {
+func (this *SpiderService) listen(listenerChan chan msg.DownloadResult) {
     for {
-        value := <- listenerChan
-        var requestData msg.DownloadResponse
-        err := json.Unmarshal([]byte(value), &requestData)
-        if err != nil {
-            logger.Error(logger.SYSTEM, err.Error())
-            continue
-        }
-        request, err := this.MessageHandler.HandleRequest(requestData)
+        request := <- listenerChan
+        request, err := this.MessageHandler.HandleRequest(request)
         if err != nil {
             logger.Error(logger.SYSTEM, err.Error())
             continue
@@ -78,7 +71,7 @@ func (this *SpiderService) listen(listenerChan chan string) {
     }
 }
 
-func (this *SpiderService) do(request msg.DownloadResponse) {
+func (this *SpiderService) do(request msg.DownloadResult) {
     if this.State == StopState {
         return
     }

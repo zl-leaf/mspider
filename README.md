@@ -69,13 +69,13 @@ func (this *DownloaderMessageHandler) HandleRequest(req string) (value string, e
     value = req
     return
 }
-func (this *DownloaderMessageHandler) HandleResponse(resp DownloadResponse) (value DownloadResponse, err error) {
+func (this *DownloaderMessageHandler) HandleResponse(resp DownloadResult) (value DownloadResult, err error) {
     value = resp
     return
 }
 
 type SpiderMessageHandler struct {}
-func (this *SpiderMessageHandler) HandleRequest(req DownloadResponse) (value DownloadResponse, err error) {
+func (this *SpiderMessageHandler) HandleRequest(req DownloadResult) (value DownloadResult, err error) {
     value = req
     return
 }

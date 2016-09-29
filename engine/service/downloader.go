@@ -2,7 +2,6 @@ package service
 import(
     "fmt"
     "time"
-    "encoding/json"
     "github.com/zl-leaf/mspider/engine/msg"
     "github.com/zl-leaf/mspider/downloader"
     "github.com/zl-leaf/mspider/logger"
@@ -16,7 +15,7 @@ const(
 
 type DownloaderService struct {
     Downloaders map[string]*downloader.Downloader
-    EventPublisher chan string
+    EventPublisher chan msg.DownloadResult
     Listener *SchedulerService
     State int
     MessageHandler msg.IDownloaderMessageHandler
@@ -94,17 +93,13 @@ func (this *DownloaderService) do(u string) {
 }
 
 func (this *DownloaderService) response(u, html string) error {
-    resp := msg.DownloadResponse{URL:u, Html:html}
-    resp, err := this.MessageHandler.HandleResponse(resp)
-    if err != nil {
-        return err
-    }
-    respJson,err := json.Marshal(resp)
+    response := msg.DownloadResult{URL:u, Html:html}
+    response, err := this.MessageHandler.HandleResponse(response)
     if err != nil {
         return err
     }
 
-    this.EventPublisher <- string(respJson)
+    this.EventPublisher <- response
     return nil
 }
 
@@ -134,7 +129,7 @@ func (this *DownloaderService) getDownloader() (dr *downloader.Downloader, err e
 func CreateDownloaderService() (downloaderService *DownloaderService) {
     downloaderService = &DownloaderService{}
     downloaderService.Downloaders = make(map[string]*downloader.Downloader, 0)
-    downloaderService.EventPublisher = make(chan string)
+    downloaderService.EventPublisher = make(chan msg.DownloadResult)
     downloaderService.MessageHandler = &msg.DownloaderMessageHandler{}
     return
 }
