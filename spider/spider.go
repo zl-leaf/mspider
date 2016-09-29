@@ -54,9 +54,12 @@ func (this *Spider) Relase() error {
 }
 
 func (this *Spider) Redirects() []string {
-    hrefs := GetRedirectURL(this.Html)
-    baseURL, _ := url.Parse(this.URL)
     redirects := make([]string, 0)
+    hrefs, err := GetRedirectURL(this.Html)
+    if err != nil {
+        return redirects
+    }
+    baseURL, _ := url.Parse(this.URL)
     for _, href := range hrefs {
         hrefURL, err := url.Parse(href)
         if err != nil {

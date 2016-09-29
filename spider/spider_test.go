@@ -52,3 +52,35 @@ func TestRules(t *testing.T) {
         t.Errorf("url can not match spider rules, url %s", testURL)
     }
 }
+
+func TestGetRedirectURL(t *testing.T) {
+    testHtml := `<!doctype html>
+<html>
+    <head>
+        <meta a="b">
+    </head>
+    <body>
+        <p><!-- this is a comment -->
+        This is some text.
+        </p>
+        <div></div>
+        <h1 class="header"></h1>
+        <a href="aURL">testa</a>
+        <h2 class="header"></h2>
+        <a href="bURL">testb</a>
+    </body>
+</html>`
+    redirects, err := GetRedirectURL(testHtml)
+    if err != nil {
+        t.Error(err)
+        return
+    }
+    if len(redirects) != 2 {
+        t.Errorf("redirects len error, got %d", len(redirects))
+        return
+    }
+
+    if redirects[0] != "aURL" || redirects[1] != "bURL" {
+        t.Errorf("redirects should 0:aURL, 1:bURL, but got 0:%s, 1:%s", redirects[0], redirects[1])
+    }
+}
