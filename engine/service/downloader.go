@@ -62,17 +62,17 @@ func (this *DownloaderService) listen(listenerChan chan string) {
             continue
         }
 
-        go this.do(request)
+        d,err := this.getDownloader()
+        if err != nil {
+            logger.Error(logger.SYSTEM, err.Error())
+            continue
+        }
+        go this.do(request, d)
     }
 }
 
-func (this *DownloaderService) do(u string) {
+func (this *DownloaderService) do(u string, d *downloader.Downloader) {
     if this.State == StopState {
-        return
-    }
-    d,err := this.getDownloader()
-    if err != nil {
-        logger.Error(logger.SYSTEM, err.Error())
         return
     }
     html,err := d.Request(u)

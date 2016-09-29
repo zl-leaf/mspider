@@ -2,7 +2,7 @@ package downloader
 import(
     "net/http"
     "io/ioutil"
-    "errors"
+    "fmt"
     "strings"
 )
 
@@ -38,18 +38,18 @@ func (this *Downloader)Request(u string) (html string, err error) {
 
     statusCode := resp.StatusCode
     if statusCode != 200 {
-        err = errors.New("response statusCode not 200")
+        err = fmt.Errorf("get url:%s error, response statusCode not 200", u)
         return
     }
 
     b, err := ioutil.ReadAll(resp.Body)
     if err != nil {
-        err = errors.New("contentType IO read error")
+        err = fmt.Errorf("get url:%s error, content IO read error", u)
         return
     }
     contentType := strings.ToLower(http.DetectContentType(b))
     if strings.Index(contentType,"text/html" ) == -1  {
-        err = errors.New("contentType not html, got " + contentType)
+        err = fmt.Errorf("get url:%s is not html, ContentType:%s", u, contentType)
         return
     }
 

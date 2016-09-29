@@ -66,28 +66,30 @@ func (this *SpiderService) listen(listenerChan chan msg.DownloadResult) {
             logger.Error(logger.SYSTEM, err.Error())
             continue
         }
-        go this.do(request)
+
+        s, err := this.getSpider(request.URL)
+        if err != nil {
+            logger.Error(logger.SYSTEM, err.Error())
+            return
+        }
+        go this.do(request, s)
     }
 }
 
-func (this *SpiderService) do(request msg.DownloadResult) {
+func (this *SpiderService) do(request msg.DownloadResult, s *spider.Spider) {
     if this.State == StopState {
         return
     }
 
-    s, err := this.getSpider(request.URL)
-    if err != nil {
-        logger.Error(logger.SYSTEM, err.Error())
-        return
-    }
-    err = s.Do(request.URL, request.Html)
+    err := s.Do(request.URL, request.Html)
     if err != nil {
         logger.Error(logger.SYSTEM, err.Error())
         return
     }
     defer s.Relase()
-    logger.Info(logger.SYSTEM, "spider id: %s crawl url: %s.", s.ID, request.URL)
-    result := msg.SpiderResult{Data:s.Redirects()}
+    redirects := s.Redirects()
+    logger.Info(logger.SYSTEM, "spider id: %s finish url: %s, got %d redirects", s.ID, request.URL, len(redirects))
+    result := msg.SpiderResult{Data:redirects}
     result, err = this.MessageHandler.HandleResponse(result)
     if err != nil {
         logger.Error(logger.SYSTEM, err.Error())
