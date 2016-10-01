@@ -19,10 +19,8 @@ func TestRequest(t *testing.T) {
     }
 
     url := "http://hao.jobbole.com/python-scrapy/"
-    html,err := downloader.Request(url)
+    _,err = downloader.Request(url)
     if err != nil {
         t.Error(err)
     }
-
-    t.Log(html)
 }

@@ -3,12 +3,14 @@ import(
     "net/http"
     "io/ioutil"
     "fmt"
-    "strings"
 )
 
 const (
     FreeState = 0
     WorkingState = 1
+
+    retryNum = 2
+    retryWait = 1
 )
 
 type Downloader struct {
@@ -22,16 +24,18 @@ func New() (downloader *Downloader, err error) {
     return
 }
 
-func (this *Downloader)Request(u string) (html string, err error) {
+func (this *Downloader) Request(u string) (html string, err error) {
     this.State = WorkingState
-    client := &http.Client{}
-    req, err := http.NewRequest("GET", u, nil)
-    if err != nil {
-        return
+    var resp *http.Response
+    downloadSuccess := false
+    for i := 0; i < retryNum; i++ {
+        resp, err = this.download(u)
+        if err == nil {
+            downloadSuccess = true
+            break
+        }
     }
-    req.Header.Add("User-Agent", `Mozilla/5.0 (Windows NT 6.3; WOW64; Trident/7.0; rv:11.0) like Gecko`)
-    resp, err := client.Do(req)
-    if err != nil {
+    if !downloadSuccess {
         return
     }
     defer resp.Body.Close()
@@ -47,13 +51,26 @@ func (this *Downloader)Request(u string) (html string, err error) {
         err = fmt.Errorf("get url:%s error, content IO read error", u)
         return
     }
-    contentType := strings.ToLower(http.DetectContentType(b))
-    if strings.Index(contentType,"text/html" ) == -1  {
-        err = fmt.Errorf("get url:%s is not html, ContentType:%s", u, contentType)
+    if !checkContentType(b) {
+        err = fmt.Errorf("get url:%s is not html", u)
         return
     }
 
     html = string(b)
+    return
+}
+
+func (this *Downloader) download(u string) (resp *http.Response, err error) {
+    client := &http.Client{}
+    req, err := http.NewRequest("GET", u, nil)
+    if err != nil {
+        return
+    }
+    req.Header.Add("User-Agent", `Mozilla/5.0 (Windows NT 6.3; WOW64; Trident/7.0; rv:11.0) like Gecko`)
+    resp, err = client.Do(req)
+    if err != nil {
+        return
+    }
     return
 }
 
