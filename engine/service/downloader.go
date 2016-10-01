@@ -1,9 +1,8 @@
 package service
 import(
-    "fmt"
-    "time"
     "github.com/zl-leaf/mspider/engine/msg"
     "github.com/zl-leaf/mspider/downloader"
+    "github.com/zl-leaf/mspider/downloader/pool"
     "github.com/zl-leaf/mspider/logger"
 )
 
@@ -14,7 +13,7 @@ const(
 )
 
 type DownloaderService struct {
-    Downloaders map[string]*downloader.Downloader
+    Pool *pool.DownloaderPool
     EventPublisher chan msg.DownloadResult
     Listener *SchedulerService
     State int
@@ -29,28 +28,7 @@ func (this *DownloaderService) Start() error {
 
 func (this *DownloaderService) Stop() error {
     this.State = StopState
-    stopChan := make(chan string)
-    go func(stopChan chan string) {
-        for _,d := range this.Downloaders {
-            logger.Info(logger.SYSTEM, "downloader id: %s wait for stop", d.ID)
-            if d.State != downloader.FreeState {
-                for {
-                    time.Sleep(time.Duration(stopDownloaderWait) * time.Second)
-                    if d.State == downloader.FreeState {
-                        break
-                    }
-                }
-            }
-            logger.Info(logger.SYSTEM, "downloader id: %s has stop", d.ID)
-        }
-        stopChan <- "stop"
-    }(stopChan)
-    <- stopChan
     return nil
-}
-
-func (this *DownloaderService) AddDownloader(d *downloader.Downloader) {
-    this.Downloaders[d.ID] = d
 }
 
 func (this *DownloaderService) listen(listenerChan chan string) {
@@ -62,7 +40,7 @@ func (this *DownloaderService) listen(listenerChan chan string) {
             continue
         }
 
-        d,err := this.getDownloader()
+        d := this.Pool.Get()
         if err != nil {
             logger.Error(logger.SYSTEM, err.Error())
             continue
@@ -76,7 +54,7 @@ func (this *DownloaderService) do(u string, d *downloader.Downloader) {
         return
     }
     html,err := d.Request(u)
-    defer d.Relase()
+    defer this.Pool.Put(d)
     if err != nil {
         logger.Error(logger.SYSTEM, err.Error())
         return
@@ -103,32 +81,9 @@ func (this *DownloaderService) response(u, html string) error {
     return nil
 }
 
-func (this *DownloaderService) getDownloader() (dr *downloader.Downloader, err error) {
-    findResult := false
-    for i := 0; i < getDownloaderRetryNum; i++ {
-        for _,d := range this.Downloaders {
-            if d.State == downloader.FreeState {
-                findResult = true
-                dr = d
-                break
-            }
-        }
-        if findResult {
-            break
-        } else {
-            time.Sleep(time.Duration(getDownloaderRetryWait) * time.Second)
-        }
-    }
-
-    if !findResult {
-        err = fmt.Errorf("can not find free downloader")
-    }
-    return
-}
-
 func CreateDownloaderService() (downloaderService *DownloaderService) {
     downloaderService = &DownloaderService{}
-    downloaderService.Downloaders = make(map[string]*downloader.Downloader, 0)
+    downloaderService.Pool = pool.New()
     downloaderService.EventPublisher = make(chan msg.DownloadResult)
     downloaderService.MessageHandler = &msg.DownloaderMessageHandler{}
     return

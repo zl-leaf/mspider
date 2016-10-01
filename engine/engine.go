@@ -28,7 +28,7 @@ func (this *Engine) SetScheduler(s *scheduler.Scheduler) {
 }
 
 func (this *Engine) AddDownloader(d *downloader.Downloader) {
-    this.DownloaderService.AddDownloader(d)
+    this.DownloaderService.Pool.Put(d)
     logger.Info(logger.SYSTEM, "add Downloader, id %s.", d.ID)
 }
 

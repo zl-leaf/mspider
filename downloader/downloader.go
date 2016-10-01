@@ -6,16 +6,12 @@ import(
 )
 
 const (
-    FreeState = 0
-    WorkingState = 1
-
     retryNum = 2
     retryWait = 1
 )
 
 type Downloader struct {
     ID string
-    State int
 }
 
 func New() (downloader *Downloader, err error) {
@@ -25,7 +21,6 @@ func New() (downloader *Downloader, err error) {
 }
 
 func (this *Downloader) Request(u string) (html string, err error) {
-    this.State = WorkingState
     var resp *http.Response
     downloadSuccess := false
     for i := 0; i < retryNum; i++ {
@@ -72,9 +67,4 @@ func (this *Downloader) download(u string) (resp *http.Response, err error) {
         return
     }
     return
-}
-
-func (this *Downloader) Relase() error {
-    this.State = FreeState
-    return nil
 }
