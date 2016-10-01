@@ -71,7 +71,8 @@ func (this *Spider) Redirects() []string {
     return redirects
 }
 
-func (this *Spider) MatchRules(u string) (result bool, err error) {
+func (this *Spider) MatchRules(u string) bool {
+    result := false
     rules := this.Rules()
     if len(rules) == 0 {
         result = true
@@ -83,5 +84,5 @@ func (this *Spider) MatchRules(u string) (result bool, err error) {
             }
         }
     }
-    return
+    return result
 }

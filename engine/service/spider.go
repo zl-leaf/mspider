@@ -106,7 +106,7 @@ func (this *SpiderService) getSpider(u string) (targetSpider *spider.Spider, err
     for i := 0; i < getSpiderRetryNum; i++ {
         matchResult := false
         for _,s := range this.Spiders {
-            if matchResult,_ = s.MatchRules(u); matchResult {
+            if matchResult = s.MatchRules(u); matchResult {
                 if s.State == spider.FreeState {
                     targetSpider = s
                     findResult = true

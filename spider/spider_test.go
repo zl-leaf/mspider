@@ -47,7 +47,7 @@ func TestRules(t *testing.T) {
     }
     testSpider,_ := New(heart)
     testURL := "www.jobbole.com";
-    matResult,_ := testSpider.MatchRules(testURL)
+    matResult := testSpider.MatchRules(testURL)
     if !matResult {
         t.Errorf("url can not match spider rules, url %s", testURL)
     }
