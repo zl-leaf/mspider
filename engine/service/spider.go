@@ -1,9 +1,9 @@
 package service
 import(
-    "fmt"
     "time"
     "github.com/zl-leaf/mspider/engine/msg"
     "github.com/zl-leaf/mspider/spider"
+    "github.com/zl-leaf/mspider/spider/pool"
     "github.com/zl-leaf/mspider/logger"
 )
 
@@ -14,7 +14,7 @@ const(
 )
 
 type SpiderService struct {
-    Spiders map[string]*spider.Spider
+    Pool *pool.SpiderPool
     EventPublisher chan msg.SpiderResult
     Listener *DownloaderService
     State int
@@ -25,7 +25,7 @@ func (this *SpiderService) Start() error {
     this.State = WorkingState
     go this.listen(this.Listener.EventPublisher)
 
-    for _,s := range this.Spiders {
+    for _,s := range this.Pool.All() {
         result := msg.SpiderResult{Data:s.StartURLs()}
         this.EventPublisher <- result
     }
@@ -35,27 +35,25 @@ func (this *SpiderService) Start() error {
 func (this *SpiderService) Stop() error {
     this.State = StopState
     stopChan := make(chan string)
+    logger.Error(logger.SYSTEM, "wait for stop")
     go func(stopChan chan string) {
-        for _,s := range this.Spiders {
-            logger.Info(logger.SYSTEM, "spider id: %s wait for stop", s.ID)
-            if s.State != spider.FreeState {
-                for {
-                    time.Sleep(time.Duration(stopSpiderWait) * time.Second)
-                    if s.State == spider.FreeState {
-                        break
-                    }
+        for {
+            allFree := true
+            for id,free := range this.Pool.States() {
+                if !free {
+                    allFree = false
+                    break
                 }
             }
-            logger.Info(logger.SYSTEM, "spider id: %s has stop", s.ID)
+            if allFree {
+                break
+            }
+            time.Sleep(time.Duration(stopSpiderWait) * time.Second)
         }
         stopChan <- "stop"
     }(stopChan)
     <- stopChan
     return nil
-}
-
-func (this *SpiderService) AddSpider(s *spider.Spider) {
-    this.Spiders[s.ID] = s
 }
 
 func (this *SpiderService) listen(listenerChan chan msg.DownloadResult) {
@@ -67,7 +65,7 @@ func (this *SpiderService) listen(listenerChan chan msg.DownloadResult) {
             continue
         }
 
-        s, err := this.getSpider(request.URL)
+        s, err := this.Pool.Get(request.URL)
         if err != nil {
             logger.Error(logger.SYSTEM, err.Error())
             return
@@ -86,7 +84,7 @@ func (this *SpiderService) do(request msg.DownloadResult, s *spider.Spider) {
         logger.Error(logger.SYSTEM, err.Error())
         return
     }
-    defer s.Relase()
+    defer this.Pool.Put(s)
     redirects := s.Redirects()
     logger.Info(logger.SYSTEM, "spider id: %s finish url: %s, got %d redirects", s.ID, request.URL, len(redirects))
     result := msg.SpiderResult{Data:redirects}
@@ -101,40 +99,9 @@ func (this *SpiderService) do(request msg.DownloadResult, s *spider.Spider) {
     this.EventPublisher <- result
 }
 
-func (this *SpiderService) getSpider(u string) (targetSpider *spider.Spider, err error) {
-    findResult := false
-    for i := 0; i < getSpiderRetryNum; i++ {
-        matchResult := false
-        for _,s := range this.Spiders {
-            if matchResult = s.MatchRules(u); matchResult {
-                if s.State == spider.FreeState {
-                    targetSpider = s
-                    findResult = true
-                    break
-                }
-            }
-        }
-
-        if !matchResult {
-            err = fmt.Errorf("can not find suitable spider for url %s", u)
-            break
-        }
-        if findResult {
-            break
-        } else {
-            time.Sleep(time.Duration(getSpiderRetryWait) * time.Second)
-        }
-    }
-
-    if !findResult {
-        err = fmt.Errorf("can not find free spider")
-    }
-    return
-}
-
 func CreateSpiderService() (spiderService *SpiderService) {
     spiderService = &SpiderService{}
-    spiderService.Spiders = make(map[string]*spider.Spider, 0)
+    spiderService.Pool = pool.New()
     spiderService.EventPublisher = make(chan msg.SpiderResult)
     spiderService.MessageHandler = &msg.SpiderMessageHandler{}
     return

@@ -33,7 +33,7 @@ func (this *Engine) AddDownloader(d *downloader.Downloader) {
 }
 
 func (this *Engine) AddSpider(s *spider.Spider) {
-    this.SpiderService.AddSpider(s)
+    this.SpiderService.Pool.Put(s)
     logger.Info(logger.SYSTEM, "add spider, id %s.", s.ID)
 }
 
