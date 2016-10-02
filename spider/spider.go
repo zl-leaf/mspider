@@ -8,13 +8,13 @@ import(
 type SpiderHeart interface {
     StartURLs() []string
     Rules() []string
-    Parse(url, content string) error
+    Parse(url string, data []byte) error
 }
 
 type Spider struct {
     ID string
     URL string
-    Html string
+    Data []byte
     Heart SpiderHeart
 }
 
@@ -32,18 +32,18 @@ func (this *Spider) StartURLs() []string {
     return this.Heart.StartURLs()
 }
 
-func (this *Spider) Do(u string, content string) error {
+func (this *Spider) Do(u string, data []byte) error {
     if _,err := url.Parse(u); err != nil {
         return fmt.Errorf("url:%s is illegal")
     }
     this.URL = u
-    this.Html = content
-    return this.Heart.Parse(u, content)
+    this.Data = data
+    return this.Heart.Parse(u, data)
 }
 
 func (this *Spider) Redirects() []string {
     redirects := make([]string, 0)
-    hrefs, err := GetRedirectURL(this.Html)
+    hrefs, err := GetRedirectURL(this.Data)
     if err != nil {
         return redirects
     }

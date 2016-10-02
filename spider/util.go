@@ -1,10 +1,13 @@
 package spider
 import(
+    "bytes"
     "strings"
+    "net/http"
     "strconv"
+    "errors"
     "math/rand"
-    "golang.org/x/net/html"
     "container/list"
+    "golang.org/x/net/html"
 )
 
 func autoID() string {
@@ -13,8 +16,20 @@ func autoID() string {
     return id
 }
 
-func GetRedirectURL(content string) (redirects []string, err error) {
-    doc, err := html.Parse(strings.NewReader(content))
+func IsHtml(data []byte) bool{
+    contentType := strings.ToLower(http.DetectContentType(data))
+    if strings.Index(contentType,"html" ) == -1  {
+        return false
+    }
+    return true
+}
+
+func GetRedirectURL(data []byte) (redirects []string, err error) {
+    if !IsHtml(data) {
+        err = errors.New("it is not html")
+        return
+    }
+    doc, err := html.Parse(bytes.NewReader(data))
     if err != nil {
         return
     }
