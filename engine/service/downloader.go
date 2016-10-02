@@ -50,7 +50,7 @@ func (this *DownloaderService) do(u string, d *downloader.Downloader) {
     if this.State == StopState {
         return
     }
-    html,err := d.Request(u)
+    result,err := d.Request(u)
     defer this.DownloaderPool.Put(d)
     if err != nil {
         logger.Error(logger.SYSTEM, err.Error())
@@ -60,7 +60,7 @@ func (this *DownloaderService) do(u string, d *downloader.Downloader) {
     if this.State == StopState {
         return
     }
-    response := msg.SpiderRequest{URL:u, Html:html}
+    response := msg.SpiderRequest{URL:u, Data:result.Data}
     this.EventPublisher <- response
     return
 }

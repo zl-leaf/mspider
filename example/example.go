@@ -19,7 +19,7 @@ func (this *DemoSpiderHeart) Rules() []string {
     return this.rules
 }
 
-func (this *DemoSpiderHeart)Parse(url, content string) error {
+func (this *DemoSpiderHeart)Parse(url string, data []byte) error {
     // TODO
     return nil
 }
