@@ -5,11 +5,6 @@ import(
     "net/url"
 )
 
-const (
-    FreeState = 0
-    WorkingState = 1
-)
-
 type SpiderHeart interface {
     StartURLs() []string
     Rules() []string
@@ -20,13 +15,12 @@ type Spider struct {
     ID string
     URL string
     Html string
-    State int
     Heart SpiderHeart
 }
 
 func New(heart SpiderHeart) (spider *Spider, err error) {
     spiderID := autoID()
-    spider = &Spider{ID:spiderID, State:FreeState, Heart:heart}
+    spider = &Spider{ID:spiderID, Heart:heart}
     return
 }
 
@@ -44,13 +38,7 @@ func (this *Spider) Do(u string, content string) error {
     }
     this.URL = u
     this.Html = content
-    this.State = WorkingState
     return this.Heart.Parse(u, content)
-}
-
-func (this *Spider) Relase() error {
-    this.State = FreeState
-    return nil
 }
 
 func (this *Spider) Redirects() []string {
