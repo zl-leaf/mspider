@@ -60,7 +60,7 @@ func (this *DownloaderService) do(u string, d *downloader.Downloader) {
     if this.State == StopState {
         return
     }
-    response := msg.SpiderRequest{URL:u, Data:result.Data}
+    response := msg.SpiderRequest{URL:u, Data:result.Data, ContentType:result.ContentType}
     this.EventPublisher <- response
     return
 }

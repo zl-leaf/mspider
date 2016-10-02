@@ -80,7 +80,8 @@ func (this *SpiderService) do(request msg.SpiderRequest, s *spider.Spider) {
         return
     }
 
-    err := s.Do(request.URL, request.Data)
+    param := spider.Param{URL:request.URL, Data:request.Data, ContentType:request.ContentType}
+    err := s.Do(param)
     if err != nil {
         logger.Error(logger.SYSTEM, err.Error())
         return

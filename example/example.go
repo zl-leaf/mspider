@@ -6,20 +6,7 @@ import (
     "github.com/zl-leaf/mspider"
 )
 
-type DemoSpiderHeart struct {
-    startURLs []string
-    rules []string
-}
-
-func (this *DemoSpiderHeart) StartURLs() []string {
-    return this.startURLs
-}
-
-func (this *DemoSpiderHeart) Rules() []string {
-    return this.rules
-}
-
-func (this *DemoSpiderHeart)Parse(url string, data []byte) error {
+func Parse(param spider.Param) error {
     // TODO
     return nil
 }
@@ -29,9 +16,10 @@ func main() {
     c := &config.Config{DownloaderNum:2}
     mspider.Load(c)
 
-    heart := &DemoSpiderHeart{
-        startURLs : []string{"http://hao.jobbole.com/python-scrapy"},
-        rules : []string{"jobbole.*"},
+    heart := &spider.Heart{
+        StartURLs : []string{"http://hao.jobbole.com/python-scrapy"},
+        Rules : []string{"jobbole.*"},
+        Parse: Parse,
     }
     spider,_ := spider.New(heart)
     mspider.RegisterSpider(spider)
@@ -40,5 +28,4 @@ func main() {
 
     time.Sleep(time.Duration(10) * time.Second)
     mspider.Stop()
-
 }

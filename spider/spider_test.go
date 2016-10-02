@@ -3,49 +3,25 @@ import(
     "testing"
 )
 
-type TestSpiderHeart struct {
-    startURLs []string
-    rules []string
-}
+var testSpider *Spider
 
-func (this *TestSpiderHeart) StartURLs() []string {
-    return this.startURLs
-}
-
-func (this *TestSpiderHeart) Rules() []string {
-    return this.rules
-}
-
-func (this *TestSpiderHeart) Parse(url string, data []byte) error {
-    return nil
-}
-
-func TestNewSpider(t *testing.T) {
-    heart := &TestSpiderHeart{
-        startURLs : []string{"http://hao.jobbole.com/python-scrapy"},
-        rules : []string{"jobbole.*"},
+func TestNew(t *testing.T) {
+    heart := &Heart{
+        StartURLs : []string{"http://hao.jobbole.com/python-scrapy"},
+        Rules : []string{"jobbole.*"},
+        Parse: func(param Param) error {
+            return nil
+        },
     }
-    testSpider,err := New(heart)
-
+    s, err := New(heart)
     if err != nil {
         t.Error(err)
     }
 
-    if len(testSpider.StartURLs()) == 0 {
-        t.Errorf("spider starturls length error, got 0")
-    }
-
-    if len(testSpider.Rules()) == 0 {
-        t.Errorf("spider rules length error, got 0")
-    }
+    testSpider = s
 }
 
 func TestRules(t *testing.T) {
-    heart := &TestSpiderHeart{
-        startURLs : []string{"http://hao.jobbole.com/python-scrapy"},
-        rules : []string{"jobbole.*"},
-    }
-    testSpider,_ := New(heart)
     testURL := "www.jobbole.com";
     matResult := testSpider.MatchRules(testURL)
     if !matResult {
@@ -54,6 +30,7 @@ func TestRules(t *testing.T) {
 }
 
 func TestGetRedirectURL(t *testing.T) {
+    param := Param{}
     testHtml := `<!doctype html>
 <html>
     <head>
@@ -65,22 +42,24 @@ func TestGetRedirectURL(t *testing.T) {
         </p>
         <div></div>
         <h1 class="header"></h1>
-        <a href="aURL">testa</a>
+        <a href="a.html">testa</a>
         <h2 class="header"></h2>
-        <a href="bURL">testb</a>
+        <a href="b.html">testb</a>
     </body>
 </html>`
-    redirects, err := GetRedirectURL([]byte(testHtml))
-    if err != nil {
-        t.Error(err)
-        return
-    }
+    param.URL = "http://www.test.com"
+    param.Data = []byte(testHtml)
+    param.ContentType = "text/html; charset=utf8"
+    testSpider.Do(param)
+    redirects := testSpider.Redirects()
     if len(redirects) != 2 {
         t.Errorf("redirects len error, got %d", len(redirects))
         return
     }
 
-    if redirects[0] != "aURL" || redirects[1] != "bURL" {
-        t.Errorf("redirects should 0:aURL, 1:bURL, but got 0:%s, 1:%s", redirects[0], redirects[1])
+    aURL := "http://www.test.com/a.html"
+    bURL := "http://www.test.com/b.html"
+    if redirects[0] != aURL || redirects[1] != bURL {
+        t.Errorf("redirects should 0:%s, 1:%s, but got 0:%s, 1:%s", aURL, bURL, redirects[0], redirects[1])
     }
 }
