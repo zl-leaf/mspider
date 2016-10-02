@@ -14,15 +14,15 @@ const(
 
 type DownloaderService struct {
     Pool *pool.DownloaderPool
+    EventListener chan string
     EventPublisher chan msg.SpiderRequest
-    Listener *SchedulerService
     State int
     Validator msg.IDownloaderValidator
 }
 
 func (this *DownloaderService) Start() error {
     this.State = WorkingState
-    go this.listen(this.Listener.EventPublisher)
+    go this.listen(this.EventListener)
     return nil
 }
 
@@ -68,6 +68,6 @@ func (this *DownloaderService) do(u string, d *downloader.Downloader) {
 func CreateDownloaderService() (downloaderService *DownloaderService) {
     downloaderService = &DownloaderService{}
     downloaderService.Pool = pool.New()
-    downloaderService.EventPublisher = make(chan msg.SpiderRequest)
+    downloaderService.EventListener = make(chan string, 10)
     return
 }

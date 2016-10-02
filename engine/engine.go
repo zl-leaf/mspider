@@ -18,9 +18,9 @@ func (this *Engine) Init() {
     this.DownloaderService = service.CreateDownloaderService()
     this.SpiderService = service.CreateSpiderService()
 
-    this.SchedulerService.Listener = this.SpiderService
-    this.DownloaderService.Listener = this.SchedulerService
-    this.SpiderService.Listener = this.DownloaderService
+    this.SpiderService.EventPublisher = this.SchedulerService.EventListener
+    this.SchedulerService.EventPublisher = this.DownloaderService.EventListener
+    this.DownloaderService.EventPublisher = this.SpiderService.EventListener
 }
 
 func (this *Engine) SetScheduler(s *scheduler.Scheduler) {

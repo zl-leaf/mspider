@@ -8,16 +8,15 @@ import(
 
 type SchedulerService struct {
     Scheduler *scheduler.Scheduler
+    EventListener chan string
     EventPublisher chan string
-    Listener *SpiderService
     State int
-    MessageHandler msg.ISchedulerMessageHandler
     Validator msg.ISchedulerValidator
 }
 
 func (this *SchedulerService) Start() error {
     this.State = WorkingState
-    go this.listen(this.Listener.EventPublisher)
+    go this.listen(this.EventListener)
     go this.push()
     return nil
 }
@@ -71,6 +70,6 @@ func (this *SchedulerService) do(request string) {
 
 func CreateSchedulerService() (schedulerService *SchedulerService) {
     schedulerService = &SchedulerService{}
-    schedulerService.EventPublisher = make(chan string)
+    schedulerService.EventListener = make(chan string, 10)
     return
 }

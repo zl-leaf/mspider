@@ -15,16 +15,15 @@ const(
 
 type SpiderService struct {
     Pool *pool.SpiderPool
+    EventListener chan msg.SpiderRequest
     EventPublisher chan string
-    Listener *DownloaderService
     State int
-    MessageHandler msg.ISpiderMessageHandler
     Validator msg.ISpiderValidator
 }
 
 func (this *SpiderService) Start() error {
     this.State = WorkingState
-    go this.listen(this.Listener.EventPublisher)
+    go this.listen(this.EventListener)
 
     for _,s := range this.Pool.All() {
         for _, u := range s.StartURLs() {
@@ -101,6 +100,6 @@ func (this *SpiderService) do(request msg.SpiderRequest, s *spider.Spider) {
 func CreateSpiderService() (spiderService *SpiderService) {
     spiderService = &SpiderService{}
     spiderService.Pool = pool.New()
-    spiderService.EventPublisher = make(chan string)
+    spiderService.EventListener = make(chan msg.SpiderRequest)
     return
 }
