@@ -8,7 +8,10 @@ var testSpider *Spider
 func TestNew(t *testing.T) {
     heart := &Heart{
         StartURLs : []string{"http://hao.jobbole.com/python-scrapy"},
-        Rules : []string{"jobbole.*"},
+        Rules : []Rule{
+            Rule{Match:"jobbole.*"},
+            Rule{Match:"test.*", ContentType:"html"},
+            },
         Parse: func(param Param) error {
             return nil
         },
@@ -22,10 +25,26 @@ func TestNew(t *testing.T) {
 }
 
 func TestRules(t *testing.T) {
-    testURL := "www.jobbole.com";
-    matResult := testSpider.MatchRules(testURL)
+    testaURL := "http://www.jobbole.com";
+    matResult := testSpider.MatchRules(Param{URL:testaURL})
     if !matResult {
-        t.Errorf("url can not match spider rules, url %s", testURL)
+        t.Errorf("url can not match spider rules, url:%s", testaURL)
+    }
+
+    matResult = testSpider.MatchRules(Param{URL:testaURL, ContentType:"text/html; charset=utf8"})
+    if !matResult {
+        t.Errorf("url can not match spider rules, url:%s and contentType:%s", testaURL, "text/html; charset=utf8")
+    }
+
+    testbURL := "http://test.com"
+    matResult = testSpider.MatchRules(Param{URL:testbURL, ContentType:"text/html; charset=utf8"})
+    if !matResult {
+        t.Errorf("url can not match spider rules, url:%s and contentType:%s", testbURL, "text/html; charset=utf8")
+    }
+
+    matResult = testSpider.MatchRules(Param{URL:testbURL, ContentType:"image/jpeg"})
+    if matResult {
+        t.Errorf("url should not match spider rules, url:%s and contentType:%s", testbURL, "image/jpeg")
     }
 }
 

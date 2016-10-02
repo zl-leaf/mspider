@@ -2,8 +2,15 @@ package spider
 import(
     "regexp"
     "fmt"
+    "strings"
     "net/url"
 )
+
+type Rule struct {
+    Match string
+    ContentType string
+    Callback func(param Param) error
+}
 
 type Param struct {
     URL string
@@ -13,7 +20,7 @@ type Param struct {
 
 type Heart struct {
     StartURLs []string
-    Rules []string
+    Rules []Rule
     Parse func(param Param) error
 }
 
@@ -29,7 +36,7 @@ func New(heart *Heart) (spider *Spider, err error) {
     return
 }
 
-func (this *Spider) Rules() []string {
+func (this *Spider) Rules() []Rule {
     return this.Heart.Rules
 }
 
@@ -64,14 +71,19 @@ func (this *Spider) Redirects() []string {
     return redirects
 }
 
-func (this *Spider) MatchRules(u string) bool {
+func (this *Spider) MatchRules(param Param) bool {
     result := false
     rules := this.Rules()
     if len(rules) == 0 {
         result = true
     } else {
         for _,rule := range rules {
-            if r,_ := regexp.MatchString(rule, u); r {
+            matchURL,_ := regexp.MatchString(rule.Match, param.URL)
+            matchContentType := false
+            if rule.ContentType == "" || strings.Index(param.ContentType, rule.ContentType) >= 0 {
+                matchContentType = true
+            }
+            if matchURL && matchContentType {
                 result = true
                 break
             }

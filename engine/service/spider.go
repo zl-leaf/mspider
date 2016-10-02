@@ -65,22 +65,21 @@ func (this *SpiderService) listen(listenerChan chan msg.SpiderRequest) {
                 continue
             }
         }
-
-        s, err := this.SpiderPool.Get(request.URL)
+        param := spider.Param{URL:request.URL, Data:request.Data, ContentType:request.ContentType}
+        s, err := this.SpiderPool.Get(param)
         if err != nil {
             logger.Error(logger.SYSTEM, err.Error())
             return
         }
-        go this.do(request, s)
+        go this.do(param, s)
     }
 }
 
-func (this *SpiderService) do(request msg.SpiderRequest, s *spider.Spider) {
+func (this *SpiderService) do(param spider.Param, s *spider.Spider) {
     if this.State == StopState {
         return
     }
 
-    param := spider.Param{URL:request.URL, Data:request.Data, ContentType:request.ContentType}
     err := s.Do(param)
     if err != nil {
         logger.Error(logger.SYSTEM, err.Error())
@@ -88,7 +87,7 @@ func (this *SpiderService) do(request msg.SpiderRequest, s *spider.Spider) {
     }
     defer this.SpiderPool.Put(s)
     redirects := s.Redirects()
-    logger.Info(logger.SYSTEM, "spider id: %s finish url: %s, got %d redirects", s.ID, request.URL, len(redirects))
+    logger.Info(logger.SYSTEM, "spider id: %s finish url: %s, got %d redirects", s.ID, param.URL, len(redirects))
     for _, u := range redirects {
         if this.State == StopState {
             break

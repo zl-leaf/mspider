@@ -21,11 +21,11 @@ func New() *Pool {
     return pool
 }
 
-func (this *Pool) Get(u string) (targetSpider *spider.Spider, err error) {
+func (this *Pool) Get(param spider.Param) (targetSpider *spider.Spider, err error) {
     for {
         matchResult := false
         for id, s := range this.data {
-            if match := s.MatchRules(u); match {
+            if match := s.MatchRules(param); match {
                 free, _ := this.state[id]
                 matchResult = true
                 if free {
@@ -36,7 +36,7 @@ func (this *Pool) Get(u string) (targetSpider *spider.Spider, err error) {
             }
         }
         if !matchResult {
-            err = fmt.Errorf("can not find suitable spider for url %s", u)
+            err = fmt.Errorf("can not find suitable spider for url %s", param.URL)
             break
         }
         if targetSpider != nil {

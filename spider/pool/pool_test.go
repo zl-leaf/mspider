@@ -4,33 +4,26 @@ import(
     "github.com/zl-leaf/mspider/spider"
 )
 
-type TestSpiderHeart struct {
-    startURLs []string
-    rules []string
-}
-
-func (this *TestSpiderHeart) StartURLs() []string {
-    return this.startURLs
-}
-
-func (this *TestSpiderHeart) Rules() []string {
-    return this.rules
-}
-
-func (this *TestSpiderHeart) Parse(url string, data []byte) error {
-    return nil
-}
-
 func TestPool(t *testing.T) {
-    hearta := &TestSpiderHeart{
-        startURLs : []string{"http://hao.jobbole.com/python-scrapy"},
-        rules : []string{"jobbole.*"},
+    hearta := &spider.Heart{
+        StartURLs : []string{"http://hao.jobbole.com/python-scrapy"},
+        Rules : []spider.Rule{
+            spider.Rule{Match:"jobbole.*"},
+            },
+        Parse: func(param spider.Param) error {
+            return nil
+        },
     }
     sa,_ := spider.New(hearta)
 
-    heartb := &TestSpiderHeart{
-        startURLs : []string{"http://baidu.com"},
-        rules : []string{"baidu.*"},
+    heartb := &spider.Heart{
+        StartURLs : []string{"http://baidu.com"},
+        Rules : []spider.Rule{
+            spider.Rule{Match:"baidu.*", ContentType:"image"},
+            },
+        Parse: func(param spider.Param) error {
+            return nil
+        },
     }
     sb,_ := spider.New(heartb)
 
@@ -39,7 +32,7 @@ func TestPool(t *testing.T) {
     pool.Put(sa)
     pool.Put(sb)
 
-    a, err := pool.Get("jobbole.com")
+    a, err := pool.Get(spider.Param{URL:"jobbole.com"})
     if err != nil {
         t.Error(err)
         return
@@ -48,7 +41,7 @@ func TestPool(t *testing.T) {
         t.Errorf("spider should got %s, but got %s", sa.ID, a.ID)
     }
 
-    b, err := pool.Get("baidu.com")
+    b, err := pool.Get(spider.Param{URL:"baidu.com", ContentType:"image/jpeg"})
     if err != nil {
         t.Error(err)
         return
@@ -58,7 +51,7 @@ func TestPool(t *testing.T) {
         t.Errorf("spider should got %s, but got %s", sb.ID, b.ID)
     }
 
-    if _, err := pool.Get("test.com"); err == nil {
+    if _, err := pool.Get(spider.Param{URL:"test.com"}); err == nil {
         t.Errorf("test.com should got error, but not now")
     }
 }

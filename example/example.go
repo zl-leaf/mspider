@@ -18,7 +18,9 @@ func main() {
 
     heart := &spider.Heart{
         StartURLs : []string{"http://hao.jobbole.com/python-scrapy"},
-        Rules : []string{"jobbole.*"},
+        Rules : []spider.Rule{
+            spider.Rule{Match:"jobbole.*", ContentType:"html"},
+            },
         Parse: Parse,
     }
     spider,_ := spider.New(heart)
