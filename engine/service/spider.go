@@ -35,7 +35,6 @@ func (this *SpiderService) Start() error {
 func (this *SpiderService) Stop() error {
     this.State = StopState
     stopChan := make(chan string)
-    logger.Error(logger.SYSTEM, "wait for stop")
     go func(stopChan chan string) {
         for {
             allFree := true
