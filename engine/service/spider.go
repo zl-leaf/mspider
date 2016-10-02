@@ -39,7 +39,7 @@ func (this *SpiderService) Stop() error {
     go func(stopChan chan string) {
         for {
             allFree := true
-            for id,free := range this.Pool.States() {
+            for _,free := range this.Pool.States() {
                 if !free {
                     allFree = false
                     break
