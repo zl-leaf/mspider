@@ -49,10 +49,18 @@ func GetRedirectURL(data []byte) (redirects []string, err error) {
             }
         }
 
-        if node.Type == html.ElementNode && node.Data == "a" {
-            for _,a := range node.Attr {
-                if a.Key == "href" {
-                    redirects = append(redirects, a.Val)
+        if node.Type == html.ElementNode{
+            if node.Data == "a" {
+                for _,a := range node.Attr {
+                    if a.Key == "href" {
+                        redirects = append(redirects, a.Val)
+                    }
+                }
+            } else if node.Data == "img" {
+                for _,a := range node.Attr {
+                    if a.Key == "src" {
+                        redirects = append(redirects, a.Val)
+                    }
                 }
             }
         }

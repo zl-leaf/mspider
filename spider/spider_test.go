@@ -70,6 +70,7 @@ func TestGetRedirectURL(t *testing.T) {
         <a href="a.html">testa</a>
         <h2 class="header"></h2>
         <a href="b.html">testb</a>
+        <img src="test.jpg">
     </body>
 </html>`
     param.URL = "http://www.test.com"
@@ -77,15 +78,18 @@ func TestGetRedirectURL(t *testing.T) {
     param.ContentType = "text/html; charset=utf8"
     testSpider.Do(param)
     redirects := testSpider.Redirects()
-    if len(redirects) != 2 {
+    if len(redirects) != 3 {
         t.Errorf("redirects len error, got %d", len(redirects))
         return
     }
 
     aURL := "http://www.test.com/a.html"
     bURL := "http://www.test.com/b.html"
+    cURL := "http://www.test.com/test.jpg"
     if redirects[0] != aURL || redirects[1] != bURL {
-        t.Errorf("redirects should 0:%s, 1:%s, but got 0:%s, 1:%s", aURL, bURL, redirects[0], redirects[1])
+        t.Errorf("redirects[0] should %s, but got %s", aURL, redirects[0])
+        t.Errorf("redirects[1] should %s, but got %s", bURL, redirects[1])
+        t.Errorf("redirects[2] should %s, but got %s", cURL, redirects[2])
     }
 }
 

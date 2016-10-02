@@ -23,10 +23,10 @@ func main() {
     mspider.Load(c)
 
     heart := &spider.Heart{
-        StartURLs : []string{"http://myurl.com"},
+        StartURLs : []string{"http://test.com"},
         Rules : []spider.Rule{
-            spider.Rule{Match:"myurl.*", ContentType:"html"},
-            spider.Rule{Match:"myurl.*", ContentType:"image", Callback:Callback},
+            spider.Rule{Match:".*", ContentType:"html"},
+            spider.Rule{Match:".*", ContentType:"image", Callback:Callback},
             },
         Parse: Parse,
     }
