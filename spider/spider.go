@@ -37,6 +37,9 @@ func New(heart *Heart) (spider *Spider, err error) {
 }
 
 func (this *Spider) Rules() []Rule {
+    if len(this.Heart.Rules) == 0 {
+        return []Rule{Rule{Match:".*"}}
+    }
     return this.Heart.Rules
 }
 
@@ -46,9 +49,16 @@ func (this *Spider) StartURLs() []string {
 
 func (this *Spider) Do(param Param) error {
     if _,err := url.Parse(param.URL); err != nil {
-        return fmt.Errorf("url:%s is illegal")
+        return fmt.Errorf("url:%s is illegal", param.URL)
     }
     this.Param = param
+    rule, ok := this.MatchRules(param)
+    if !ok {
+        return fmt.Errorf("url:%s can not find the spider rule", param.URL)
+    }
+    if rule.Callback != nil {
+        return rule.Callback(param)
+    }
     return this.Heart.Parse(param)
 }
 
@@ -71,23 +81,19 @@ func (this *Spider) Redirects() []string {
     return redirects
 }
 
-func (this *Spider) MatchRules(param Param) bool {
-    result := false
+func (this *Spider) MatchRules(param Param) (result Rule, match bool) {
     rules := this.Rules()
-    if len(rules) == 0 {
-        result = true
-    } else {
-        for _,rule := range rules {
-            matchURL,_ := regexp.MatchString(rule.Match, param.URL)
-            matchContentType := false
-            if rule.ContentType == "" || strings.Index(param.ContentType, rule.ContentType) >= 0 {
-                matchContentType = true
-            }
-            if matchURL && matchContentType {
-                result = true
-                break
-            }
+    for _,rule := range rules {
+        matchURL,_ := regexp.MatchString(rule.Match, param.URL)
+        matchContentType := false
+        if rule.ContentType == "" || strings.Index(param.ContentType, rule.ContentType) >= 0 {
+            matchContentType = true
+        }
+        if matchURL && matchContentType {
+            result = rule
+            match = true
+            break
         }
     }
-    return result
+    return
 }

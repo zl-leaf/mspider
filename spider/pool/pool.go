@@ -25,7 +25,7 @@ func (this *Pool) Get(param spider.Param) (targetSpider *spider.Spider, err erro
     for {
         matchResult := false
         for id, s := range this.data {
-            if match := s.MatchRules(param); match {
+            if _,match := s.MatchRules(param); match {
                 free, _ := this.state[id]
                 matchResult = true
                 if free {

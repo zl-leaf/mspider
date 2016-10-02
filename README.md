@@ -11,24 +11,17 @@ import (
     "time"
     "github.com/zl-leaf/mspider/config"
     "github.com/zl-leaf/mspider/spider"
+    "github.com/zl-leaf/mspider/logger"
     "github.com/zl-leaf/mspider"
 )
 
-type DemoSpiderHeart struct {
-    startURLs []string
-    rules []string
-}
-
-func (this *DemoSpiderHeart) StartURLs() []string {
-    return this.startURLs
-}
-
-func (this *DemoSpiderHeart) Rules() []string {
-    return this.rules
-}
-
-func (this *DemoSpiderHeart)Parse(url, content string) error {
+func Parse(param spider.Param) error {
     // TODO
+    return nil
+}
+
+func Callback(param spider.Param) error {
+    logger.Info(logger.SYSTEM, "url:%s call callback function", param.URL)
     return nil
 }
 
@@ -37,18 +30,21 @@ func main() {
     c := &config.Config{DownloaderNum:2}
     mspider.Load(c)
 
-    heart := &DemoSpiderHeart{
-        startURLs : []string{"http://hao.jobbole.com/python-scrapy"},
-        rules : []string{"jobbole.*"},
+    heart := &spider.Heart{
+        StartURLs : []string{"http://myurl.com"},
+        Rules : []spider.Rule{
+            spider.Rule{Match:"myurl.*", ContentType:"html"},
+            spider.Rule{Match:"myurl.*", ContentType:"image", Callback:Callback},
+            },
+        Parse: Parse,
     }
-    spider,_ := spider.New("", heart)
+    spider,_ := spider.New(heart)
     mspider.RegisterSpider(spider)
 
     mspider.Start()
 
-    time.Sleep(time.Duration(10) * time.Second)// 10秒后停止抓取
+    time.Sleep(time.Duration(10) * time.Second)
     mspider.Stop()
-
 }
 ```
 

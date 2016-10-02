@@ -1,9 +1,14 @@
 package spider
 import(
     "testing"
+    "errors"
 )
 
 var testSpider *Spider
+
+func Callback(param Param) error {
+    return errors.New("test call back ok")
+}
 
 func TestNew(t *testing.T) {
     heart := &Heart{
@@ -11,6 +16,7 @@ func TestNew(t *testing.T) {
         Rules : []Rule{
             Rule{Match:"jobbole.*"},
             Rule{Match:"test.*", ContentType:"html"},
+            Rule{Match:"callback.*", Callback:Callback},
             },
         Parse: func(param Param) error {
             return nil
@@ -26,24 +32,24 @@ func TestNew(t *testing.T) {
 
 func TestRules(t *testing.T) {
     testaURL := "http://www.jobbole.com";
-    matResult := testSpider.MatchRules(Param{URL:testaURL})
-    if !matResult {
+    _, ok := testSpider.MatchRules(Param{URL:testaURL})
+    if !ok {
         t.Errorf("url can not match spider rules, url:%s", testaURL)
     }
 
-    matResult = testSpider.MatchRules(Param{URL:testaURL, ContentType:"text/html; charset=utf8"})
-    if !matResult {
+    _, ok = testSpider.MatchRules(Param{URL:testaURL, ContentType:"text/html; charset=utf8"})
+    if !ok {
         t.Errorf("url can not match spider rules, url:%s and contentType:%s", testaURL, "text/html; charset=utf8")
     }
 
     testbURL := "http://test.com"
-    matResult = testSpider.MatchRules(Param{URL:testbURL, ContentType:"text/html; charset=utf8"})
-    if !matResult {
+    _, ok = testSpider.MatchRules(Param{URL:testbURL, ContentType:"text/html; charset=utf8"})
+    if !ok {
         t.Errorf("url can not match spider rules, url:%s and contentType:%s", testbURL, "text/html; charset=utf8")
     }
 
-    matResult = testSpider.MatchRules(Param{URL:testbURL, ContentType:"image/jpeg"})
-    if matResult {
+    _, ok = testSpider.MatchRules(Param{URL:testbURL, ContentType:"image/jpeg"})
+    if ok {
         t.Errorf("url should not match spider rules, url:%s and contentType:%s", testbURL, "image/jpeg")
     }
 }
@@ -80,5 +86,18 @@ func TestGetRedirectURL(t *testing.T) {
     bURL := "http://www.test.com/b.html"
     if redirects[0] != aURL || redirects[1] != bURL {
         t.Errorf("redirects should 0:%s, 1:%s, but got 0:%s, 1:%s", aURL, bURL, redirects[0], redirects[1])
+    }
+}
+
+func TestCallback(t *testing.T) {
+    err := testSpider.Do(Param{URL:"http://jobbole.com"})
+    if err != nil {
+        t.Error("spider can not call the parse function")
+    }
+
+    testURL := "http://callback.com"
+    err = testSpider.Do(Param{URL:testURL})
+    if err == nil || err.Error() != "test call back ok" {
+        t.Error("spider can not call the callback function")
     }
 }
