@@ -14,7 +14,7 @@ const(
 )
 
 type SpiderService struct {
-    Pool *pool.SpiderPool
+    SpiderPool *pool.Pool
     EventListener chan msg.SpiderRequest
     EventPublisher chan string
     State int
@@ -25,7 +25,7 @@ func (this *SpiderService) Start() error {
     this.State = WorkingState
     go this.listen(this.EventListener)
 
-    for _,s := range this.Pool.All() {
+    for _,s := range this.SpiderPool.All() {
         for _, u := range s.StartURLs() {
             this.EventPublisher <- u
         }
@@ -39,7 +39,7 @@ func (this *SpiderService) Stop() error {
     go func(stopChan chan string) {
         for {
             allFree := true
-            for _,free := range this.Pool.States() {
+            for _,free := range this.SpiderPool.States() {
                 if !free {
                     allFree = false
                     break
@@ -66,7 +66,7 @@ func (this *SpiderService) listen(listenerChan chan msg.SpiderRequest) {
             }
         }
 
-        s, err := this.Pool.Get(request.URL)
+        s, err := this.SpiderPool.Get(request.URL)
         if err != nil {
             logger.Error(logger.SYSTEM, err.Error())
             return
@@ -85,7 +85,7 @@ func (this *SpiderService) do(request msg.SpiderRequest, s *spider.Spider) {
         logger.Error(logger.SYSTEM, err.Error())
         return
     }
-    defer this.Pool.Put(s)
+    defer this.SpiderPool.Put(s)
     redirects := s.Redirects()
     logger.Info(logger.SYSTEM, "spider id: %s finish url: %s, got %d redirects", s.ID, request.URL, len(redirects))
     for _, u := range redirects {
@@ -99,7 +99,7 @@ func (this *SpiderService) do(request msg.SpiderRequest, s *spider.Spider) {
 
 func CreateSpiderService() (spiderService *SpiderService) {
     spiderService = &SpiderService{}
-    spiderService.Pool = pool.New()
+    spiderService.SpiderPool = pool.New()
     spiderService.EventListener = make(chan msg.SpiderRequest)
     return
 }

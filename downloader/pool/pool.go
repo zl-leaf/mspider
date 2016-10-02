@@ -9,16 +9,16 @@ const(
     timeWait = 1
 )
 
-type DownloaderPool struct {
+type Pool struct {
     data *list.List
 }
 
-func New() *DownloaderPool {
-    pool := &DownloaderPool{data:list.New()}
+func New() *Pool {
+    pool := &Pool{data:list.New()}
     return pool
 }
 
-func (this *DownloaderPool) Get() *downloader.Downloader {
+func (this *Pool) Get() *downloader.Downloader {
     var result *downloader.Downloader
     for {
         if this.data.Len() > 0 {
@@ -32,6 +32,6 @@ func (this *DownloaderPool) Get() *downloader.Downloader {
     return result
 }
 
-func (this *DownloaderPool) Put(d *downloader.Downloader) {
+func (this *Pool) Put(d *downloader.Downloader) {
     this.data.PushBack(d)
 }

@@ -28,12 +28,12 @@ func (this *Engine) SetScheduler(s *scheduler.Scheduler) {
 }
 
 func (this *Engine) AddDownloader(d *downloader.Downloader) {
-    this.DownloaderService.Pool.Put(d)
+    this.DownloaderService.DownloaderPool.Put(d)
     logger.Info(logger.SYSTEM, "add Downloader, id %s.", d.ID)
 }
 
 func (this *Engine) AddSpider(s *spider.Spider) {
-    this.SpiderService.Pool.Put(s)
+    this.SpiderService.SpiderPool.Put(s)
     logger.Info(logger.SYSTEM, "add spider, id %s.", s.ID)
 }
 

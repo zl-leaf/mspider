@@ -9,19 +9,19 @@ const(
     timeWait = 1
 )
 
-type SpiderPool struct {
+type Pool struct {
     data map[string]*spider.Spider
     state map[string]bool
 }
 
-func New() *SpiderPool {
-    pool := new(SpiderPool)
+func New() *Pool {
+    pool := new(Pool)
     pool.data = make(map[string]*spider.Spider)
     pool.state = make(map[string]bool)
     return pool
 }
 
-func (this *SpiderPool) Get(u string) (targetSpider *spider.Spider, err error) {
+func (this *Pool) Get(u string) (targetSpider *spider.Spider, err error) {
     for {
         matchResult := false
         for id, s := range this.data {
@@ -47,17 +47,17 @@ func (this *SpiderPool) Get(u string) (targetSpider *spider.Spider, err error) {
     return
 }
 
-func (this *SpiderPool) Put(s *spider.Spider) {
+func (this *Pool) Put(s *spider.Spider) {
     if _, ok := this.data[s.ID]; !ok {
         this.data[s.ID] = s
     }
     this.state[s.ID] = true
 }
 
-func (this *SpiderPool) All() map[string]*spider.Spider {
+func (this *Pool) All() map[string]*spider.Spider {
     return this.data
 }
 
-func (this *SpiderPool) States() map[string]bool {
+func (this *Pool) States() map[string]bool {
     return this.state
 }

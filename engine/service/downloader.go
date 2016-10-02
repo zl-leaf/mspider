@@ -13,7 +13,7 @@ const(
 )
 
 type DownloaderService struct {
-    Pool *pool.DownloaderPool
+    DownloaderPool *pool.Pool
     EventListener chan string
     EventPublisher chan msg.SpiderRequest
     State int
@@ -41,7 +41,7 @@ func (this *DownloaderService) listen(listenerChan chan string) {
             }
         }
 
-        d := this.Pool.Get()
+        d := this.DownloaderPool.Get()
         go this.do(request, d)
     }
 }
@@ -51,7 +51,7 @@ func (this *DownloaderService) do(u string, d *downloader.Downloader) {
         return
     }
     html,err := d.Request(u)
-    defer this.Pool.Put(d)
+    defer this.DownloaderPool.Put(d)
     if err != nil {
         logger.Error(logger.SYSTEM, err.Error())
         return
@@ -67,7 +67,7 @@ func (this *DownloaderService) do(u string, d *downloader.Downloader) {
 
 func CreateDownloaderService() (downloaderService *DownloaderService) {
     downloaderService = &DownloaderService{}
-    downloaderService.Pool = pool.New()
+    downloaderService.DownloaderPool = pool.New()
     downloaderService.EventListener = make(chan string, 10)
     return
 }
