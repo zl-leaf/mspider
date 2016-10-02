@@ -1,8 +1,10 @@
 package downloader
 import(
     "net/http"
+    "io"
     "io/ioutil"
     "fmt"
+    "bytes"
 )
 
 const (
@@ -14,13 +16,18 @@ type Downloader struct {
     ID string
 }
 
+type Result struct {
+    Data io.Reader
+    ContentType string
+}
+
 func New() (downloader *Downloader, err error) {
     downloaderID := autoID()
     downloader = &Downloader{ID:downloaderID}
     return
 }
 
-func (this *Downloader) Request(u string) (html string, err error) {
+func (this *Downloader) Request(u string) (result Result, err error) {
     var resp *http.Response
     downloadSuccess := false
     for i := 0; i < retryNum; i++ {
@@ -46,12 +53,8 @@ func (this *Downloader) Request(u string) (html string, err error) {
         err = fmt.Errorf("get url:%s error, content IO read error", u)
         return
     }
-    if !checkContentType(b) {
-        err = fmt.Errorf("get url:%s is not html", u)
-        return
-    }
-
-    html = string(b)
+    result.Data = bytes.NewReader(b)
+    result.ContentType = http.DetectContentType(b[:512])
     return
 }
 
