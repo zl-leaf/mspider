@@ -12,6 +12,7 @@ type SchedulerService struct {
     Listener *SpiderService
     State int
     MessageHandler msg.ISchedulerMessageHandler
+    Validator msg.ISchedulerValidator
 }
 
 func (this *SchedulerService) Start() error {
@@ -30,7 +31,7 @@ func (this *SchedulerService) SetScheduler(s *scheduler.Scheduler) {
     this.Scheduler = s
 }
 
-func (this *SchedulerService) listen(listenerChan chan msg.SpiderResult) {
+func (this *SchedulerService) listen(listenerChan chan string) {
     for {
         if this.State == StopState {
             break
@@ -46,13 +47,6 @@ func (this *SchedulerService) push() {
             continue
         }
         u, err := this.Scheduler.Head()
-
-        if err != nil {
-            logger.Error(logger.SYSTEM, err.Error())
-            continue
-        }
-
-        u, err = this.MessageHandler.HandleResponse(u)
         if err != nil {
             logger.Error(logger.SYSTEM, err.Error())
             continue
@@ -65,20 +59,18 @@ func (this *SchedulerService) push() {
     }
 }
 
-func (this *SchedulerService) do(request msg.SpiderResult) {
-    request, err := this.MessageHandler.HandleRequest(request)
-    if err != nil {
-        logger.Error(logger.SYSTEM, err.Error())
-        return
+func (this *SchedulerService) do(request string) {
+    if this.Validator != nil {
+        if err := this.Validator.Validate(request); err != nil {
+            logger.Error(logger.SYSTEM, err.Error())
+            return
+        }
     }
-    for _, u := range request.Data {
-        this.Scheduler.Add(u)
-    }
+    this.Scheduler.Add(request)
 }
 
 func CreateSchedulerService() (schedulerService *SchedulerService) {
     schedulerService = &SchedulerService{}
     schedulerService.EventPublisher = make(chan string)
-    schedulerService.MessageHandler = &msg.SchedulerMessageHandler{}
     return
 }

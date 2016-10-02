@@ -52,16 +52,16 @@ func (this *MSpider) RegisterSpider(s *spider.Spider) {
     this.Engine.AddSpider(s)
 }
 
-func (this *MSpider) SetSchedulerMessageHandler(MessageHandler msg.ISchedulerMessageHandler) {
-    this.Engine.SchedulerService.MessageHandler = MessageHandler
+func (this *MSpider) SetSchedulerValidator(validator msg.ISchedulerValidator) {
+    this.Engine.SchedulerService.Validator = validator
 }
 
-func (this *MSpider) SetDownloaderMessageHandler(MessageHandler msg.IDownloaderMessageHandler) {
-    this.Engine.DownloaderService.MessageHandler = MessageHandler
+func (this *MSpider) SetDownloaderValidator(validator msg.IDownloaderValidator) {
+    this.Engine.DownloaderService.Validator = validator
 }
 
-func (this *MSpider) SetSpiderMessageHandler(MessageHandler msg.ISpiderMessageHandler) {
-    this.Engine.SpiderService.MessageHandler = MessageHandler
+func (this *MSpider) SetSpiderValidator(validator msg.ISpiderValidator) {
+    this.Engine.SpiderService.Validator = validator
 }
 
 func (this *MSpider)Start() {

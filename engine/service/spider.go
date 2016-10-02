@@ -15,10 +15,11 @@ const(
 
 type SpiderService struct {
     Pool *pool.SpiderPool
-    EventPublisher chan msg.SpiderResult
+    EventPublisher chan string
     Listener *DownloaderService
     State int
     MessageHandler msg.ISpiderMessageHandler
+    Validator msg.ISpiderValidator
 }
 
 func (this *SpiderService) Start() error {
@@ -26,8 +27,9 @@ func (this *SpiderService) Start() error {
     go this.listen(this.Listener.EventPublisher)
 
     for _,s := range this.Pool.All() {
-        result := msg.SpiderResult{Data:s.StartURLs()}
-        this.EventPublisher <- result
+        for _, u := range s.StartURLs() {
+            this.EventPublisher <- u
+        }
     }
     return nil
 }
@@ -55,13 +57,14 @@ func (this *SpiderService) Stop() error {
     return nil
 }
 
-func (this *SpiderService) listen(listenerChan chan msg.DownloadResult) {
+func (this *SpiderService) listen(listenerChan chan msg.SpiderRequest) {
     for {
         request := <- listenerChan
-        request, err := this.MessageHandler.HandleRequest(request)
-        if err != nil {
-            logger.Error(logger.SYSTEM, err.Error())
-            continue
+        if this.Validator != nil {
+            if err := this.Validator.Validate(request); err != nil {
+                logger.Error(logger.SYSTEM, err.Error())
+                continue
+            }
         }
 
         s, err := this.Pool.Get(request.URL)
@@ -73,7 +76,7 @@ func (this *SpiderService) listen(listenerChan chan msg.DownloadResult) {
     }
 }
 
-func (this *SpiderService) do(request msg.DownloadResult, s *spider.Spider) {
+func (this *SpiderService) do(request msg.SpiderRequest, s *spider.Spider) {
     if this.State == StopState {
         return
     }
@@ -86,22 +89,18 @@ func (this *SpiderService) do(request msg.DownloadResult, s *spider.Spider) {
     defer this.Pool.Put(s)
     redirects := s.Redirects()
     logger.Info(logger.SYSTEM, "spider id: %s finish url: %s, got %d redirects", s.ID, request.URL, len(redirects))
-    result := msg.SpiderResult{Data:redirects}
-    result, err = this.MessageHandler.HandleResponse(result)
-    if err != nil {
-        logger.Error(logger.SYSTEM, err.Error())
-        return
+    for _, u := range redirects {
+        if this.State == StopState {
+            break
+        }
+        this.EventPublisher <- u
     }
-    if this.State == StopState {
-        return
-    }
-    this.EventPublisher <- result
+    return
 }
 
 func CreateSpiderService() (spiderService *SpiderService) {
     spiderService = &SpiderService{}
     spiderService.Pool = pool.New()
-    spiderService.EventPublisher = make(chan msg.SpiderResult)
-    spiderService.MessageHandler = &msg.SpiderMessageHandler{}
+    spiderService.EventPublisher = make(chan string)
     return
 }

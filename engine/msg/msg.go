@@ -1,10 +1,6 @@
 package msg
 
-type DownloadResult struct {
+type SpiderRequest struct {
     URL string
     Html string
-}
-
-type SpiderResult struct {
-    Data []string
 }
