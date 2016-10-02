@@ -1,10 +1,8 @@
 package downloader
 import(
     "net/http"
-    "io"
     "io/ioutil"
     "fmt"
-    "bytes"
 )
 
 const (
@@ -17,7 +15,7 @@ type Downloader struct {
 }
 
 type Result struct {
-    Data io.Reader
+    Data []byte
     ContentType string
 }
 
@@ -53,8 +51,8 @@ func (this *Downloader) Request(u string) (result Result, err error) {
         err = fmt.Errorf("get url:%s error, content IO read error", u)
         return
     }
-    result.Data = bytes.NewReader(b)
-    result.ContentType = http.DetectContentType(b[:512])
+    result.Data = b
+    result.ContentType = http.DetectContentType(b)
     return
 }
 
