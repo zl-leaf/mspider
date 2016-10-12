@@ -35,24 +35,19 @@ func (this *SpiderService) Start() error {
 
 func (this *SpiderService) Stop() error {
     this.State = StopState
-    stopChan := make(chan string)
-    go func(stopChan chan string) {
-        for {
-            allFree := true
-            for _,free := range this.SpiderPool.States() {
-                if !free {
-                    allFree = false
-                    break
-                }
-            }
-            if allFree {
+    for {
+        allFree := true
+        for _,free := range this.SpiderPool.States() {
+            if !free {
+                allFree = false
                 break
             }
-            time.Sleep(time.Duration(stopSpiderWait) * time.Second)
         }
-        stopChan <- "stop"
-    }(stopChan)
-    <- stopChan
+        if allFree {
+            break
+        }
+        time.Sleep(time.Duration(stopSpiderWait) * time.Second)
+    }
     return nil
 }
 
