@@ -64,7 +64,7 @@ func (this *SpiderService) listen(listenerChan chan msg.SpiderRequest) {
         s, err := this.SpiderPool.Get(param)
         if err != nil {
             logger.Error(logger.SYSTEM, err.Error())
-            return
+            continue
         }
         go this.do(param, s)
     }
