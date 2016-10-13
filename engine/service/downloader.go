@@ -6,12 +6,6 @@ import(
     "github.com/zl-leaf/mspider/logger"
 )
 
-const(
-    stopDownloaderWait = 1
-    getDownloaderRetryNum = 3
-    getDownloaderRetryWait = 1
-)
-
 type DownloaderService struct {
     DownloaderPool *pool.Pool
     EventListener chan string

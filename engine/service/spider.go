@@ -7,12 +7,6 @@ import(
     "github.com/zl-leaf/mspider/logger"
 )
 
-const(
-    stopSpiderWait = 1
-    getSpiderRetryNum = 3
-    getSpiderRetryWait = 1
-)
-
 type SpiderService struct {
     SpiderPool *pool.Pool
     EventListener chan msg.SpiderRequest
