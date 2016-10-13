@@ -7,16 +7,24 @@ import(
     "github.com/zl-leaf/mspider/logger"
 )
 
+const (
+    stopSpiderWait = 1
+)
+
 type SpiderService struct {
     SpiderPool *pool.Pool
     EventListener chan msg.SpiderRequest
     EventPublisher chan string
-    State int
+    State IState
     Validator msg.ISpiderValidator
 }
 
 func (this *SpiderService) Start() error {
-    this.State = WorkingState
+    nextState, err := this.State.Next(WorkingStateCode)
+    if err != nil {
+        return err
+    }
+    this.State = nextState
     go this.listen(this.EventListener)
 
     for _,s := range this.SpiderPool.All() {
@@ -28,7 +36,11 @@ func (this *SpiderService) Start() error {
 }
 
 func (this *SpiderService) Stop() error {
-    this.State = StopState
+    nextState, err := this.State.Next(StopStateCode)
+    if err != nil {
+        return err
+    }
+    this.State = nextState
     for {
         allFree := true
         for _,free := range this.SpiderPool.States() {
@@ -42,6 +54,11 @@ func (this *SpiderService) Stop() error {
         }
         time.Sleep(time.Duration(stopSpiderWait) * time.Second)
     }
+    nextState, err = this.State.Next(FreeStateCode)
+    if err != nil {
+        return err
+    }
+    this.State = nextState
     return nil
 }
 
@@ -65,7 +82,7 @@ func (this *SpiderService) listen(listenerChan chan msg.SpiderRequest) {
 }
 
 func (this *SpiderService) do(param spider.Param, s *spider.Spider) {
-    if this.State == StopState {
+    if this.State.Code() != WorkingStateCode {
         return
     }
 
@@ -78,7 +95,7 @@ func (this *SpiderService) do(param spider.Param, s *spider.Spider) {
     redirects := s.Redirects()
     logger.Info(logger.SYSTEM, "spider id: %s finish url: %s, got %d redirects", s.ID, param.URL, len(redirects))
     for _, u := range redirects {
-        if this.State == StopState {
+        if this.State.Code() != WorkingStateCode {
             break
         }
         this.EventPublisher <- u
@@ -90,5 +107,6 @@ func CreateSpiderService() (spiderService *SpiderService) {
     spiderService = &SpiderService{}
     spiderService.SpiderPool = pool.New()
     spiderService.EventListener = make(chan msg.SpiderRequest)
+    spiderService.State = createState(FreeStateCode)
     return
 }

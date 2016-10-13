@@ -10,19 +10,27 @@ type SchedulerService struct {
     Scheduler *scheduler.Scheduler
     EventListener chan string
     EventPublisher chan string
-    State int
+    State IState
     Validator msg.ISchedulerValidator
 }
 
 func (this *SchedulerService) Start() error {
-    this.State = WorkingState
+    nextState, err := this.State.Next(WorkingStateCode)
+    if err != nil {
+        return err
+    }
+    this.State = nextState
     go this.listen(this.EventListener)
     go this.push()
     return nil
 }
 
 func (this *SchedulerService) Stop() error {
-    this.State = StopState
+    nextState, err := this.State.Next(FreeStateCode)
+    if err != nil {
+        return err
+    }
+    this.State = nextState
     return nil
 }
 
@@ -32,9 +40,6 @@ func (this *SchedulerService) SetScheduler(s *scheduler.Scheduler) {
 
 func (this *SchedulerService) listen(listenerChan chan string) {
     for {
-        if this.State == StopState {
-            break
-        }
         request := <- listenerChan
         this.do(request)
     }
@@ -50,7 +55,7 @@ func (this *SchedulerService) push() {
             logger.Error(logger.SYSTEM, err.Error())
             continue
         }
-        if this.State == StopState {
+        if this.State.Code() != WorkingStateCode {
             break
         }
         this.EventPublisher <- u
@@ -59,6 +64,9 @@ func (this *SchedulerService) push() {
 }
 
 func (this *SchedulerService) do(request string) {
+    if this.State.Code() != WorkingStateCode {
+        return
+    }
     if this.Validator != nil {
         if err := this.Validator.Validate(request); err != nil {
             logger.Error(logger.SYSTEM, err.Error())
@@ -71,5 +79,6 @@ func (this *SchedulerService) do(request string) {
 func CreateSchedulerService() (schedulerService *SchedulerService) {
     schedulerService = &SchedulerService{}
     schedulerService.EventListener = make(chan string, 10)
+    schedulerService.State = createState(FreeStateCode)
     return
 }

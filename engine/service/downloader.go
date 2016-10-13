@@ -10,18 +10,26 @@ type DownloaderService struct {
     DownloaderPool *pool.Pool
     EventListener chan string
     EventPublisher chan msg.SpiderRequest
-    State int
+    State IState
     Validator msg.IDownloaderValidator
 }
 
 func (this *DownloaderService) Start() error {
-    this.State = WorkingState
+    nextState, err := this.State.Next(WorkingStateCode)
+    if err != nil {
+        return err
+    }
+    this.State = nextState
     go this.listen(this.EventListener)
     return nil
 }
 
 func (this *DownloaderService) Stop() error {
-    this.State = StopState
+    nextState, err := this.State.Next(FreeStateCode)
+    if err != nil {
+        return err
+    }
+    this.State = nextState
     return nil
 }
 
@@ -41,7 +49,7 @@ func (this *DownloaderService) listen(listenerChan chan string) {
 }
 
 func (this *DownloaderService) do(u string, d *downloader.Downloader) {
-    if this.State == StopState {
+    if this.State.Code() != WorkingStateCode {
         return
     }
     result,err := d.Request(u)
@@ -51,7 +59,7 @@ func (this *DownloaderService) do(u string, d *downloader.Downloader) {
         return
     }
     logger.Info(logger.SYSTEM, "downloader id: %s download url: %s.", d.ID, u)
-    if this.State == StopState {
+    if this.State.Code() != WorkingStateCode {
         return
     }
     response := msg.SpiderRequest{URL:u, Data:result.Data, ContentType:result.ContentType}
@@ -63,5 +71,6 @@ func CreateDownloaderService() (downloaderService *DownloaderService) {
     downloaderService = &DownloaderService{}
     downloaderService.DownloaderPool = pool.New()
     downloaderService.EventListener = make(chan string, 10)
+    downloaderService.State = createState(FreeStateCode)
     return
 }
