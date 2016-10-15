@@ -1,5 +1,6 @@
 package scheduler
 import(
+    "time"
     "github.com/zl-leaf/mspider/scheduler/queue"
 )
 
@@ -11,6 +12,7 @@ type Scheduler struct {
 func New() (scheduler *Scheduler, err error) {
     scheduler = &Scheduler{}
     scheduler.Queue = queue.New()
+    scheduler.Interval = int(time.Second)
     return
 }
 

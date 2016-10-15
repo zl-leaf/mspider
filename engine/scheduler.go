@@ -73,6 +73,8 @@ func (this *SchedulerService) do(request string) {
 
 func CreateSchedulerService() (schedulerService *SchedulerService) {
     schedulerService = &SchedulerService{}
+    s, _ := scheduler.New()
+    schedulerService.Scheduler = s
     schedulerService.EventListener = make(chan string, 10)
     schedulerService.State = createState(FreeStateCode)
     return

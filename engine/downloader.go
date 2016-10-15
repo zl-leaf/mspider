@@ -69,7 +69,7 @@ func (this *DownloaderService) do(u string, d *downloader.Downloader) {
 
 func CreateDownloaderService() (downloaderService *DownloaderService) {
     downloaderService = &DownloaderService{}
-    downloaderService.DownloaderPool = pool.New()
+    downloaderService.DownloaderPool = pool.New(0)
     downloaderService.EventListener = make(chan string, 10)
     downloaderService.State = createState(FreeStateCode)
     return

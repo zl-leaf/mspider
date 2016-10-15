@@ -4,10 +4,15 @@ import(
     "time"
     "github.com/zl-leaf/mspider/config"
     "github.com/zl-leaf/mspider/engine"
-    "github.com/zl-leaf/mspider/scheduler"
     "github.com/zl-leaf/mspider/downloader"
     "github.com/zl-leaf/mspider/spider"
     "github.com/zl-leaf/mspider/logger"
+)
+
+const(
+    defaultLogPath = "./"
+    defaultSpiderInterval = int(time.Second)
+    defaultDownloaderNum = 1
 )
 
 type MSpider struct {
@@ -26,23 +31,31 @@ func (this *MSpider) init() {
 }
 
 func (this *MSpider) Load(mConfig *config.Config) error {
+    // load logger
     if mConfig.LogPath != "" {
         logger.SetLogPath(mConfig.LogPath)
     } else {
-        logger.SetLogPath("./")
+        logger.SetLogPath(defaultLogPath)
     }
 
-    s,_ := scheduler.New()
+    // load scheduler service
     if mConfig.SpiderInterval > 0 {
-        s.Interval = mConfig.SpiderInterval
+        this.Engine.SchedulerService.Scheduler.Interval = mConfig.SpiderInterval
     } else {
-        s.Interval = int(time.Second)
+        this.Engine.SchedulerService.Scheduler.Interval = defaultSpiderInterval
     }
-    this.Engine.SetScheduler(s)
 
-    for i := 0; i < mConfig.DownloaderNum; i++ {
+    // load download service
+    var downloaderNum = defaultDownloaderNum
+    if mConfig.DownloaderNum > 0 {
+        downloaderNum = mConfig.DownloaderNum
+    }
+    this.Engine.DownloaderService.DownloaderPool.Total = downloaderNum
+    for i := 0; i < downloaderNum; i++ {
         d,_ := downloader.New()
-        this.Engine.AddDownloader(d)
+        if !this.Engine.DownloaderService.DownloaderPool.Put(d) {
+            break
+        }
     }
     return nil
 }
