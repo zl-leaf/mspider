@@ -10,11 +10,12 @@ const(
 )
 
 type Pool struct {
+    Total int
     data *list.List
 }
 
-func New() *Pool {
-    pool := &Pool{data:list.New()}
+func New(total int) *Pool {
+    pool := &Pool{Total:total, data:list.New()}
     return pool
 }
 
@@ -32,6 +33,10 @@ func (this *Pool) Get() *downloader.Downloader {
     return result
 }
 
-func (this *Pool) Put(d *downloader.Downloader) {
+func (this *Pool) Put(d *downloader.Downloader) bool {
+    if this.Total > 0 && this.data.Len() >= this.Total {
+        return false
+    }
     this.data.PushBack(d)
+    return true
 }
