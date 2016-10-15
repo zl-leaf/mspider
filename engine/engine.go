@@ -1,6 +1,5 @@
 package engine
 import (
-    "github.com/zl-leaf/mspider/engine/service"
     "github.com/zl-leaf/mspider/scheduler"
     "github.com/zl-leaf/mspider/downloader"
     "github.com/zl-leaf/mspider/spider"
@@ -8,15 +7,15 @@ import (
 )
 
 type Engine struct {
-    SchedulerService *service.SchedulerService
-    DownloaderService *service.DownloaderService
-    SpiderService *service.SpiderService
+    SchedulerService *SchedulerService
+    DownloaderService *DownloaderService
+    SpiderService *SpiderService
 }
 
 func (this *Engine) Init() {
-    this.SchedulerService = service.CreateSchedulerService()
-    this.DownloaderService = service.CreateDownloaderService()
-    this.SpiderService = service.CreateSpiderService()
+    this.SchedulerService = CreateSchedulerService()
+    this.DownloaderService = CreateDownloaderService()
+    this.SpiderService = CreateSpiderService()
 
     this.SpiderService.EventPublisher = this.SchedulerService.EventListener
     this.SchedulerService.EventPublisher = this.DownloaderService.EventListener
