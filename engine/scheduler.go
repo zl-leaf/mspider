@@ -33,10 +33,6 @@ func (this *SchedulerService) Stop() error {
     return nil
 }
 
-func (this *SchedulerService) SetScheduler(s *scheduler.Scheduler) {
-    this.Scheduler = s
-}
-
 func (this *SchedulerService) listen(listenerChan chan string) {
     for {
         request := <- listenerChan

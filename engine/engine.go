@@ -23,7 +23,7 @@ func (this *Engine) Init() {
 }
 
 func (this *Engine) SetScheduler(s *scheduler.Scheduler) {
-    this.SchedulerService.SetScheduler(s)
+    this.SchedulerService.Scheduler = s
 }
 
 func (this *Engine) AddDownloader(d *downloader.Downloader) {
