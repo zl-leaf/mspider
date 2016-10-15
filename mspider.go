@@ -4,7 +4,6 @@ import(
     "time"
     "github.com/zl-leaf/mspider/config"
     "github.com/zl-leaf/mspider/engine"
-    "github.com/zl-leaf/mspider/engine/msg"
     "github.com/zl-leaf/mspider/scheduler"
     "github.com/zl-leaf/mspider/downloader"
     "github.com/zl-leaf/mspider/spider"
@@ -52,16 +51,16 @@ func (this *MSpider) RegisterSpider(s *spider.Spider) {
     this.Engine.AddSpider(s)
 }
 
-func (this *MSpider) SetSchedulerValidator(validator msg.ISchedulerValidator) {
-    this.Engine.SchedulerService.Validator = validator
+func (this *MSpider) SetSchedulerValidate(validate func(request string) error) {
+    this.Engine.SchedulerService.Validate = validate
 }
 
-func (this *MSpider) SetDownloaderValidator(validator msg.IDownloaderValidator) {
-    this.Engine.DownloaderService.Validator = validator
+func (this *MSpider) SetDownloaderValidator(validate func(request string) error) {
+    this.Engine.DownloaderService.Validate = validate
 }
 
-func (this *MSpider) SetSpiderValidator(validator msg.ISpiderValidator) {
-    this.Engine.SpiderService.Validator = validator
+func (this *MSpider) SetSpiderValidate(validate func(request spider.Param) error) {
+    this.Engine.SpiderService.Validate = validate
 }
 
 func (this *MSpider)Start() {

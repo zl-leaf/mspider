@@ -1,7 +1,6 @@
 package engine
 import(
     "time"
-    "github.com/zl-leaf/mspider/engine/msg"
     "github.com/zl-leaf/mspider/spider"
     "github.com/zl-leaf/mspider/spider/pool"
     "github.com/zl-leaf/mspider/logger"
@@ -13,10 +12,10 @@ const (
 
 type SpiderService struct {
     SpiderPool *pool.Pool
-    EventListener chan msg.SpiderRequest
+    EventListener chan spider.Param
     EventPublisher chan string
     State IState
-    Validator msg.ISpiderValidator
+    Validate func(request spider.Param) error
 }
 
 func (this *SpiderService) Start() error {
@@ -62,16 +61,15 @@ func (this *SpiderService) Stop() error {
     return nil
 }
 
-func (this *SpiderService) listen(listenerChan chan msg.SpiderRequest) {
+func (this *SpiderService) listen(listenerChan chan spider.Param) {
     for {
-        request := <- listenerChan
-        if this.Validator != nil {
-            if err := this.Validator.Validate(request); err != nil {
+        param := <- listenerChan
+        if this.Validate != nil {
+            if err := this.Validate(param); err != nil {
                 logger.Error(logger.SYSTEM, err.Error())
                 continue
             }
         }
-        param := spider.Param{URL:request.URL, Data:request.Data, ContentType:request.ContentType}
         s, err := this.SpiderPool.Get(param)
         if err != nil {
             logger.Error(logger.SYSTEM, err.Error())
@@ -106,7 +104,7 @@ func (this *SpiderService) do(param spider.Param, s *spider.Spider) {
 func CreateSpiderService() (spiderService *SpiderService) {
     spiderService = &SpiderService{}
     spiderService.SpiderPool = pool.New()
-    spiderService.EventListener = make(chan msg.SpiderRequest)
+    spiderService.EventListener = make(chan spider.Param)
     spiderService.State = createState(FreeStateCode)
     return
 }

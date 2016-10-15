@@ -1,7 +1,6 @@
 package engine
 import(
     "time"
-    "github.com/zl-leaf/mspider/engine/msg"
     "github.com/zl-leaf/mspider/scheduler"
     "github.com/zl-leaf/mspider/logger"
 )
@@ -11,7 +10,7 @@ type SchedulerService struct {
     EventListener chan string
     EventPublisher chan string
     State IState
-    Validator msg.ISchedulerValidator
+    Validate func(request string) error
 }
 
 func (this *SchedulerService) Start() error {
@@ -67,8 +66,8 @@ func (this *SchedulerService) do(request string) {
     if this.State.Code() != WorkingStateCode {
         return
     }
-    if this.Validator != nil {
-        if err := this.Validator.Validate(request); err != nil {
+    if this.Validate != nil {
+        if err := this.Validate(request); err != nil {
             logger.Error(logger.SYSTEM, err.Error())
             return
         }

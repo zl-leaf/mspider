@@ -1,7 +1,7 @@
 package engine
 import(
-    "github.com/zl-leaf/mspider/engine/msg"
     "github.com/zl-leaf/mspider/downloader"
+    "github.com/zl-leaf/mspider/spider"
     "github.com/zl-leaf/mspider/downloader/pool"
     "github.com/zl-leaf/mspider/logger"
 )
@@ -9,9 +9,9 @@ import(
 type DownloaderService struct {
     DownloaderPool *pool.Pool
     EventListener chan string
-    EventPublisher chan msg.SpiderRequest
+    EventPublisher chan spider.Param
     State IState
-    Validator msg.IDownloaderValidator
+    Validate func(request string) error
 }
 
 func (this *DownloaderService) Start() error {
@@ -36,8 +36,8 @@ func (this *DownloaderService) Stop() error {
 func (this *DownloaderService) listen(listenerChan chan string) {
     for {
         request := <- listenerChan
-        if this.Validator != nil {
-            if err := this.Validator.Validate(request); err != nil {
+        if this.Validate != nil {
+            if err := this.Validate(request); err != nil {
                 logger.Error(logger.SYSTEM, err.Error())
                 continue
             }
@@ -62,7 +62,7 @@ func (this *DownloaderService) do(u string, d *downloader.Downloader) {
     if this.State.Code() != WorkingStateCode {
         return
     }
-    response := msg.SpiderRequest{URL:u, Data:result.Data, ContentType:result.ContentType}
+    response := spider.Param{URL:u, Data:result.Data, ContentType:result.ContentType}
     this.EventPublisher <- response
     return
 }
